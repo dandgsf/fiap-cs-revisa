@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Revisões e simulados de Computer Science da FIAP, organizados por semestre, fase, assunto e capítulo. Material independente para estudar com a turma.">
+  <meta name="theme-color" content="#131516">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <link rel="icon" href="assets/fiap.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/styles.css">
+  <script defer src="content/semesters/01/phases/01.js"></script>
+  <script defer src="content/semesters/01/phases/02.js"></script>
+  <script defer src="content/semesters/01/phases/03.js"></script>
+  <script defer src="content/semesters/01/phases/04.js"></script>
+  <script defer src="content/semesters/01/enrichment.js"></script>
+  <script defer src="content/semesters/01/sources.js"></script>
+  <script defer src="content/semesters/01/questions.js"></script>
+  <script defer src="content/semesters/01/final-exams.js"></script>
+  <script defer src="content/semesters/01/practice.js"></script>
+  <script defer src="content/catalog.js"></script>
+  <script defer src="assets/engine.js"></script>
+  <script defer src="assets/render.js"></script>
+  <script defer src="assets/app.js"></script>
+  <title>FIAP CS Revisa · Revisões e simulados</title>
+</head>
+<body>
+  <a class="skip-link" href="#estudo">Pular para a revisão</a>
+  <header class="site-header">
+    <a class="brand" href="#inicio" aria-label="FIAP CS Revisa, início"><img src="assets/fiap.svg" width="100" height="28" alt="FIAP"><span>CS <strong>Revisa</strong></span></a>
+    <nav aria-label="Navegação principal"><a href="#estudo">Revisão</a><button class="nav-button" id="header-exam" type="button">Simulados</button><a href="#fontes">Sobre e fontes</a></nav>
+    <button class="text-button" id="theme-toggle" type="button" aria-pressed="false">Tema claro</button>
+  </header>
+  <main>
+    <section class="hero" id="inicio" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <h1 id="hero-title">Entenda agora.<br><span>Lembre na prova.</span></h1>
+        <p class="hero-lead">Sua revisão de Computer Science, um conceito de cada vez. Retome a teoria, resolva os exemplos e coloque o raciocínio à prova.</p>
+        <div class="hero-actions"><a class="button button-primary" href="#estudo" id="begin-review">Explorar a revisão <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a><button class="button button-secondary" type="button" id="hero-exam">Ir para o simulado</button></div>
+        <p class="authorship-note">Feito para estudar com a turma. Material independente, sem vínculo oficial com a FIAP.</p>
+      </div>
+      <aside class="hero-route" aria-label="Como estudar com o guia">
+        <h2>Do conceito à resposta.</h2>
+        <ol class="study-steps"><li><span aria-hidden="true">01</span><div><strong>Escolha um assunto</strong><p>Encontre seu semestre, fase e capítulo.</p></div></li><li><span aria-hidden="true">02</span><div><strong>Reconstrua o raciocínio</strong><p>Leia, cubra a solução e tente explicar.</p></div></li><li><span aria-hidden="true">03</span><div><strong>Pratique e volte aos erros</strong><p>Responda antes de abrir a correção.</p></div></li></ol>
+        <p>Seu progresso fica neste navegador.<br>Sem cadastro. Funciona offline.</p>
+      </aside>
+    </section>
+    <div id="storage-warning" class="global-notice" role="status" hidden></div>
+    <noscript><p class="global-notice">Ative o JavaScript para carregar os capítulos e simulados. Todos os arquivos acompanham este guia; não é preciso acessar a internet.</p></noscript>
+    <section class="study-shell" id="estudo" aria-labelledby="study-title" tabindex="-1">
+      <div class="study-heading"><div><h2 id="study-title">Seu próximo assunto.</h2><p>Escolha por onde continuar. O conteúdo acompanha a estrutura do curso.</p></div><button id="print-guide" class="text-button" type="button">Imprimir semestre</button></div>
+      <div class="library-controls"><label>Semestre<select id="semester-select"></select></label><label class="search-field">Buscar neste semestre<input id="study-search" type="search" placeholder="Ex.: listas encadeadas, Taylor, energia" autocomplete="off" maxlength="120" aria-controls="search-results"></label></div>
+      <div id="search-results" class="search-results" aria-live="polite" hidden></div>
+      <div id="semester-empty" class="empty-state" hidden><h3>O próximo semestre começa aqui.</h3><p>Ainda não há revisões ou questões publicadas para este semestre. Seus estudos do primeiro continuam salvos.</p><button class="button button-secondary" id="back-semester" type="button">Voltar ao 1º semestre</button></div>
+      <div id="semester-content">
+        <div class="semester-summary"><p id="catalog-summary"></p><p id="reading-summary"></p></div>
+        <div class="study-tabs-wrap"><div id="phase-tabs" class="study-tabs" role="tablist" aria-label="Fases e simulado final"></div></div>
+        <div class="library-layout">
+          <aside class="library-sidebar"><details id="library-menu" open><summary>Navegar pelos assuntos</summary><nav id="course-tree" aria-label="Semestre, fases, assuntos e capítulos"></nav></details><div class="sidebar-note"><strong>Priorize o raciocínio.</strong><p>Essencial destaca conceitos e aplicações. Complementar guarda detalhes de apoio. Nenhum nível prevê a prova.</p><a href="#criterios">Entender os critérios</a></div></aside>
+          <div class="reading-workspace">
+            <nav id="breadcrumbs" class="breadcrumbs" aria-label="Caminho do conteúdo"></nav>
+            <div id="study-notice" class="study-notice" role="alert" hidden></div>
+            <div id="phase-panels"></div>
+            <section id="panel-final" class="tabpanel final-panel" role="tabpanel" aria-labelledby="tab-final" tabindex="0" hidden>
+              <header class="phase-heading"><h2>O semestre em dez questões.</h2><p>Um espaço para conectar os assuntos. Cinco alternativas, uma correta e explicações depois de responder tudo. São três conjuntos de dez questões; o resultado é um diagnóstico, não uma certificação de domínio.</p></header>
+              <div id="exam-gate" class="gate-block"><h3>Reserve um tempo para revisar.</h3><p>O percurso mantém 10 minutos de revisão ativa em cada uma das fases 1 e 2 antes do simulado final. As práticas dos capítulos e das fases já estão disponíveis.</p><div id="gate-progress"></div><p class="small">O contador pausa ao sair da janela ou após 90 segundos sem interação. Tempo não mede domínio: revise também as outras fases.</p><button class="button button-primary" id="return-review" type="button">Continuar a revisão</button></div>
+              <div id="final-ready" class="ready-block" hidden><h3>Pronto para reunir os conceitos?</h3><p>Use papel para os cálculos. Não há cronômetro de prova; suas respostas ficam salvas enquanto você resolve.</p><button class="button button-primary" id="start-final" type="button">Iniciar tentativa 1 de 3</button></div>
+              <div id="attempt-history" class="attempt-history" aria-label="Histórico das tentativas"></div><div id="final-quiz"></div>
+              <div id="next-attempt" class="next-attempt" hidden><p id="attempt-limit"></p><button class="button button-primary" id="new-attempt" type="button">Gerar nova tentativa</button></div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="sources" id="fontes" aria-labelledby="sources-title">
+      <div class="sources-intro"><h2 id="sources-title">Estude com contexto.</h2><p>Este guia organiza uma revisão e amplia sua prática. Os materiais da disciplina continuam sendo a referência para aprofundar e conferir o conteúdo.</p></div>
+      <div class="source-details">
+        <details id="criterios"><summary>O que significa a prioridade de estudo?</summary><p><strong>Essencial:</strong> conceitos, operações e interpretação que sustentam outros assuntos e permitem formular exercícios. <strong>Complementar:</strong> nomes, datas e detalhes que apoiam a compreensão. <strong>Contexto do projeto:</strong> enunciados e integrações, reunidos em uma leitura breve.</p><p>É uma escolha editorial baseada nos PDFs e em dependências entre conceitos, não uma estimativa de chance de cobrança. Não foi fornecida uma matriz oficial da prova. Os capítulos temáticos têm pelo menos quatro questões; IA, estruturas lineares, cálculo e regressão múltipla recebem oito cada. Mesmo assim, representar um capítulo não significa cobrir todos os seus tópicos.</p></details>
+        <details class="source-notes"><summary>Consultar o catálogo dos PDFs</summary><p>As páginas indicam a posição no PDF individual, incluindo capa. Os exemplos são autorais. Os PDFs do acervo privado não acompanham este projeto.</p><div id="source-catalog"></div></details>
+        <details class="source-notes"><summary>Conferir divergências e referências</summary><ul><li>ISO 26000 é uma orientação de responsabilidade social, não uma certificação. O sumário do capítulo 8 da fase 1 traz “ISO 2600”. <a href="https://www.iso.org/iso-26000-social-responsibility.html" target="_blank" rel="noopener noreferrer">Referência da ISO</a>.</li><li>A projeção original de Moore (1965) e a revisão de 1975 são marcos diferentes. <a href="https://www.intel.com/content/www/us/en/newsroom/resources/moores-law.html" target="_blank" rel="noopener noreferrer">Histórico da Intel</a>.</li><li>O Pacto Global foi lançado em 2000, apesar da divergência de datas no PDF. <a href="https://press.un.org/en/2000/20000726.sgsm7495.doc.html" target="_blank" rel="noopener noreferrer">Registro da ONU</a>.</li><li>A Agenda 2030 reúne 17 ODS e 169 metas. <a href="https://sdgs.un.org/2030agenda" target="_blank" rel="noopener noreferrer">Agenda 2030</a>.</li><li><code>sizeof</code> mede bytes de C. O método de listas Python chama-se <code>extend</code>. As datas de fronteira das gerações de computadores variam entre os materiais.</li></ul><p>Links externos são consultas opcionais. O guia não carrega recursos remotos.</p></details>
+        <details><summary>Entender seu progresso e privacidade</summary><p>Leituras marcadas, tempo, respostas e tema ficam apenas neste navegador. Compartilhar a pasta não compartilha suas respostas. Não há conta, rastreamento ou envio de resultados.</p><p>A marcação de leitura é uma declaração sua; a nota mede apenas as questões respondidas. O treino por capítulo pode conter questões dos simulados. Limpar os dados do navegador pode apagar seu progresso.</p></details>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer"><span>FIAP CS Revisa · iniciativa independente<br>© 2026 Danilo Fernandes · RM570057 · <a href="https://github.com/dandgsf" target="_blank" rel="noopener noreferrer">@dandgsf</a></span><a href="#inicio">Voltar ao início</a></footer>
+</body>
+</html>

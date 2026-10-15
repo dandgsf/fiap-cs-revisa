@@ -1,0 +1,17 @@
+node_modules/
+output/
+dist/
+tmp/
+coverage/
+.env
+.env.*
+*.pem
+*.key
+*.pub
+*.p12
+*.pfx
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
