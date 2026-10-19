@@ -124,35 +124,35 @@ globalThis.FIAPBank = { finals: [], minis: {} };
     ],"Calcule o erro com sinal e depois eleve ao quadrado. MSE evita o cancelamento de erros positivos e negativos.")
   ];
   bank.minis[4] = [
-    q("m4-1",4,S,3,"18–30","Uma rota com duas arestas custa 12; outra com três custa 7. Todos os pesos são não negativos. Qual método minimiza o custo?",[
+    q("m4-1",4,S,3,"25–27","O SIGIC precisa enviar energia do Armazenamento ao Centro Médico. Há duas rotas candidatas: uma com duas arestas e perda total de 12 kWh e outra com três arestas e perda total de 7 kWh. Todas as arestas da rede têm perdas não negativas, e o objetivo é minimizar a soma das perdas em qualquer configuração da rede, não só neste par de rotas. Qual método garante a rota de menor perda?",[
       ["Dijkstra usando os pesos.","Busca menor soma de pesos sob a condição de não negatividade."],
       ["BFS ignorando pesos, pois menos arestas sempre custa menos.","O enunciado mostra o contrário: três arestas custam menos."],
       ["DFS, que sempre retorna a rota mais barata primeiro.","DFS não possui essa garantia."],
       ["Busca binária nos nomes dos vértices.","Busca por chave ordenada não resolve menor caminho."],
       ["Escolher só a aresta localmente mais barata a cada passo.","Essa estratégia não equivale a manter distâncias e relaxar arestas com Dijkstra."]
     ],"O objetivo é soma de custos, não quantidade de saltos. Defina peso e pré-condições antes de escolher o algoritmo."),
-    q("m4-2",4,M,4,"23–25","Para f(x)=x³, f'(0)=0 e f''(0)=0. O que se pode afirmar?",[
+    q("m4-2",4,M,4,"23–26","Ao estudar um modelo cúbico f(x) = x³ para a variação de carga de um módulo, a equipe calcula f′(0) = 0 e f″(0) = 0. Antes de tratar x = 0 como ponto de operação ótimo, ela precisa classificar esse ponto crítico. O que se pode afirmar sobre x = 0?",[
       ["O teste de segunda derivada é inconclusivo e em 0 não há extremo local.","x³ permanece crescente e atravessa zero, apesar da tangente horizontal."],
       ["Há necessariamente mínimo local.","Derivada zero define um candidato, não garante mínimo."],
       ["Há necessariamente máximo local.","Segunda derivada zero não estabelece máximo."],
       ["A função é constante em todo o domínio.","Derivada nula num ponto não implica função constante."],
       ["A função é indefinida em zero.","x³ é definida e diferenciável nesse ponto."]
     ],"Verifique o comportamento local ou o sinal da derivada. Um ponto estacionário pode ser uma inflexão."),
-    q("m4-3",4,M,5,"9–15","Uma regressão usa 40 observações, três preditores e intercepto. Quais dimensões permitem ŷ=Xβ?",[
+    q("m4-3",4,M,5,"10–13","A equipe da Aurora ajusta uma regressão para prever o consumo diário de um módulo a partir de três preditores (temperatura externa, ocupação e horas de operação), com intercepto, usando 40 dias de medição. Para escrever o modelo como ŷ = Xβ, quais dimensões de X e de β tornam o produto possível e coerente com os dados?",[
       ["X: 40×4; β: 4×1.","São três colunas de preditores mais uma de 1 para o intercepto."],
       ["X: 40×3; β: 3×1.","Falta o intercepto solicitado."],
       ["X: 4×40; β: 4×1.","Inverte observações e coeficientes e torna o produto incompatível."],
       ["X: 40×40; β: 3×1.","Não corresponde à organização por observações e preditores."],
       ["X: 3×4; β: 40×1.","As dimensões não representam os dados nem permitem o produto."]
     ],"A previsão precisa ter 40×1. Confira as dimensões internas e a coluna adicional do intercepto."),
-    q("m4-4",4,E,7,"7–10","Uma bateria de 30 kWh permite utilizar 80% e entrega 90% dessa energia após perdas. Com carga de 3 kW e potência admissível suficiente, qual a autonomia?",[
+    q("m4-4",4,E,7,"9–13","O módulo de habitação da Aurora tem uma bateria de 30 kWh nominais. A política de operação permite usar 80% da capacidade, e a entrega à carga tem eficiência de 90% depois das perdas. A carga é constante, de 3 kW, e fica dentro da potência admissível da bateria. Qual é a autonomia estimada?",[
       ["7,2 h.","30×0,8×0,9=21,6 kWh; 21,6/3=7,2 h."],
       ["10 h.","Ignora limite de utilização e perdas."],
       ["8 h.","Desconta utilização, mas ignora eficiência de entrega."],
       ["9 h.","Aplica eficiência, mas ignora o limite de 80%."],
       ["21,6 h.","21,6 é energia em kWh; ainda precisa dividir pela potência."]
     ],"Calcule energia efetivamente entregue e depois tempo de atendimento. Mantenha unidades coerentes em cada etapa."),
-    q("m4-5",4,E,8,"25–36","Qual iniciativa combina economia circular e avaliação de ciclo de vida?",[
+    q("m4-5",4,E,8,"25–28","A colônia vai substituir os servidores do centro de controle e quer uma política que aplique ao mesmo tempo os princípios da economia circular e uma avaliação de ciclo de vida bem feita, sem apenas transferir impactos para outra etapa ou para fornecedores. Qual iniciativa atende aos dois critérios?",[
       ["Projetar para reparo e reuso e comparar impactos por serviço ao longo da vida útil.","Preserva valor e usa uma base funcional para comparar alternativas."],
       ["Considerar só reciclagem e declarar impacto total nulo.","Reciclagem é uma etapa e também tem impactos."],
       ["Trocar bens funcionais a cada lançamento.","Pode ampliar fabricação e descarte sem benefício equivalente."],

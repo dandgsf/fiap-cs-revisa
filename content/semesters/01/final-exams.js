@@ -59,14 +59,14 @@
       ["Previsão 60; a inclinação é 12.","Multiplica indevidamente o intercepto e troca os coeficientes."],
       ["Previsão 24; a inclinação prova que x causa y.","O cálculo não estabelece causalidade."]
     ],"Distinga intercepto, inclinação, previsão e observação. Resíduo tem convenção explícita de sinal, e associação não prova causalidade."),
-    q("a9",4,S,3,"25–30","Uma rede não direcionada tem A–B=4, A–C=1, C–B=2, B–D=1 e C–D=7. Qual caminho de A até D tem menor custo?",[
+    q("a9",4,S,3,"27–29","Na rede de distribuição da colônia, não direcionada e com perdas em kWh nas arestas, as ligações são A–B = 4, A–C = 1, C–B = 2, B–D = 1 e C–D = 7. O SIGIC deve escolher a rota de menor perda total do módulo A ao módulo D. Qual é essa rota e qual é o seu custo?",[
       ["A–C–B–D, custo 4.","1+2+1=4, menor que A–B–D=5 e A–C–D=8."],
       ["A–B–D, custo 5, pois possui menos arestas.","Menos arestas não implica menor soma de pesos."],
       ["A–C–D, custo 8, pois começa pela menor aresta.","Escolher a primeira aresta barata não determina o melhor restante da rota."],
       ["A–C–B–D, custo 3.","3 é a quantidade de arestas; a soma dos pesos é 4."],
       ["Nenhum algoritmo se aplica porque os pesos são positivos.","Pesos não negativos satisfazem a pré-condição de Dijkstra."]
     ],"Compare custos completos. Dijkstra atualiza distâncias e predecessores; ele não escolhe apenas a menor aresta visível."),
-    q("a10",4,M,6,"10–19","Um modelo estima p(falha)=0,38. A política emite alerta para p≥0,30; positivo significa falha. Qual decisão e interpretação são corretas?",[
+    q("a10",4,M,6,"14–16; 25–26","Um classificador logístico monitora os inversores da colônia, com falha como classe positiva. Por causa do alto custo de uma falha não detectada, a política emite alerta quando p ≥ 0,30. Para um inversor, o modelo estima p(falha) = 0,38. Que decisão a política toma, e como classificar o erro se, depois, não houver falha real?",[
       ["Emitir alerta; se não houver falha real, será um falso positivo.","0,38 supera o limiar; alerta sem evento real é falso positivo."],
       ["Não emitir alerta porque p<0,50.","O limiar explicitado é 0,30, não obrigatoriamente 0,50."],
       ["Emitir alerta; se não houver falha, será falso negativo.","Falso negativo é uma falha real não alertada."],
@@ -131,14 +131,14 @@
       ["A operação é produto matricial e gera shape (4,).", "O enunciado pede subtração por coluna, não multiplicação matricial."],
       ["O vetor deve ter shape (4,) porque há quatro linhas.","Para médias por coluna, há três valores; (4,) não alinha com o último eixo 3."]
     ],"Compare dimensões da direita para a esquerda: devem coincidir ou uma delas deve ser 1. Interprete também o significado de cada eixo."),
-    q("b9",4,M,4,"16–25","C(x)=x²−10x+29 para 0≤x≤8. Qual valor minimiza C no intervalo?",[
+    q("b9",4,M,4,"23–26","O custo de operação de um compressor da colônia, em função da potência ajustada x (em kW), é modelado por C(x) = x² − 10x + 29, e só são admissíveis ajustes com 0 ≤ x ≤ 8. Usando a derivada e comparando com as extremidades do intervalo, qual ajuste minimiza C e qual é o custo mínimo?",[
       ["x=5, com C=4.","C'=2x−10 zera em 5; C''=2>0 e as extremidades têm custos maiores."],
       ["x=10, com C=29.","Está fora do intervalo e não é o ponto estacionário."],
       ["x=0, com C=29.","O custo é maior que o do ponto interno x=5."],
       ["x=8, com C=13.","É admissível, mas C(5)=4 é menor."],
       ["Qualquer x, pois a segunda derivada é constante.","Segunda derivada constante não implica função constante."]
     ],"Encontre candidatos pela primeira derivada, classifique quando possível e compare com as extremidades admissíveis."),
-    q("b10",4,M,6,"8–18","A probabilidade inicial é 0,20. Mantidas as outras variáveis, um aumento unitário de um preditor multiplica as odds por 2. Qual a nova probabilidade?",[
+    q("b10",4,M,6,"8–9; 18","Num modelo logístico de risco de falha de uma bomba de água, a probabilidade estimada para um equipamento é 0,20. O coeficiente do preditor “centenas de horas desde a última manutenção” vale ln 2: um aumento de uma unidade, com os demais preditores fixos, multiplica as odds por 2. Qual passa a ser a probabilidade estimada de falha?",[
       ["1/3, aproximadamente 0,333.","Odds iniciais=0,2/0,8=0,25; novas=0,5; p=0,5/(1+0,5)=1/3."],
       ["0,40.","Dobrar odds não é dobrar diretamente a probabilidade."],
       ["0,50.","0,50 são as novas odds, não a nova probabilidade."],
@@ -189,28 +189,28 @@
       ["Oito vezes a energia anual em qualquer local.","Velocidade pontual e potência idealizada não determinam energia anual."],
       ["A potência não muda porque a fonte é renovável.","Renovabilidade não torna a potência independente da velocidade."]
     ],"Separe a consequência algébrica dentro do modelo da promessa operacional fora de suas hipóteses."),
-    q("c7",4,P,2,"19–30","Em Python: m=[[0,0]]*2; m[0][1]=7. Qual é o conteúdo final de m?",[
+    q("c7",4,P,2,"19–21; 54–55","Para registrar duas leituras por turno, um script da colônia inicializa a grade com `m = [[0, 0]] * 2` e depois grava a primeira medição com `m[0][1] = 7`. Antes de enviar a grade ao painel, a equipe imprime `m`. Qual é o conteúdo exibido?",[
       ["[[0,7],[0,7]]", "As duas posições externas apontam para a mesma lista interna; a mutação aparece nas duas."],
       ["[[0,7],[0,0]]", "Seria o resultado se as linhas fossem objetos independentes."],
       ["[[7,0],[0,0]]", "Além de ignorar aliasing, altera a coluna errada."],
       ["[[0,0],[0,7]]", "A referência compartilhada impede que só a segunda representação mude."],
       ["Erro porque listas Python são imutáveis.","Listas são mutáveis; tuplas são imutáveis quanto às referências de elementos."]
     ],"Repetir uma lista externa pode repetir referências. Para linhas independentes, construa cada linha numa compreensão."),
-    q("c8",4,M,5,"7–19","No modelo ŷ=6+4x₁−2x₂, qual é o efeito de aumentar x₁ em 2 e x₂ em 1, e como interpretar o coeficiente de x₂?",[
+    q("c8",4,M,5,"7–9; 18–19","Um modelo de regressão múltipla prevê o consumo de um laboratório, em kWh, como ŷ = 6 + 4x₁ − 2x₂, em que x₁ é o número de experimentos ativos e x₂ são as horas com ventilação natural. Num novo cenário, x₁ aumenta 2 unidades e x₂ aumenta 1. Qual é a variação prevista do consumo e como se interpreta o coeficiente de x₂?",[
       ["A previsão aumenta 6; uma unidade de x₂ associa-se a −2, mantendo x₁ constante.","Δŷ=4×2−2×1=6; o efeito parcial exige fixar os demais preditores."],
       ["A previsão aumenta 12; o intercepto entra no cálculo da diferença.","O intercepto cancela ao comparar duas previsões do mesmo modelo."],
       ["A previsão diminui 2; x₁ deixa de importar.","Os dois preditores mudam e suas contribuições devem ser somadas."],
       ["A previsão aumenta 6; o coeficiente prova causalidade de x₂.","A conta está correta, mas o modelo sozinho não prova causalidade."],
       ["A previsão aumenta 8; coeficientes negativos são ignorados.","O coeficiente negativo participa normalmente do cálculo."]
     ],"Calcule diferenças pelos coeficientes dos preditores. Interpretação parcial não significa causalidade."),
-    q("c9",4,E,7,"7–10; 22–28","Há 12 kWh utilizáveis numa bateria cujo limite de descarga é 2 kW. Uma carga exige 3 kW constantes por 2 h. A bateria pode atendê-la sozinha?",[
+    q("c9",4,E,7,"9–11","Durante uma tempestade de poeira, o laboratório atmosférico precisa de 3 kW constantes por 2 h. A bateria local tem 12 kWh utilizáveis, mas o fabricante limita a descarga a 2 kW. Sem outra fonte disponível, a bateria consegue atender sozinha essa demanda?",[
       ["Não: há energia suficiente, mas a potência admissível é insuficiente.","A carga exige 6 kWh, abaixo de 12, porém 3 kW excedem o limite de 2 kW."],
       ["Sim: 12 kWh são maiores que 3 kW.","Compara grandezas de unidades diferentes e ignora a limitação de potência."],
       ["Sim: atenderia por 4 h sem considerar qualquer limite.","12/3=4 h só seria aplicável se a bateria pudesse fornecer 3 kW."],
       ["Não: seriam necessários 18 kWh.","A energia pedida é 3×2=6 kWh, não 18."],
       ["Depende apenas de a fonte original ser renovável.","A origem não elimina a restrição de descarga."]
     ],"Capacidade e potência são condições independentes. Verifique ambas antes de calcular autonomia operacional.","Analisar"),
-    q("c10",4,M,6,"19–20","Com falha como classe positiva, um classificador tem VP=12, FP=4, FN=3, VN=81. Quais precisão e recall?",[
+    q("c10",4,M,6,"19–21","Um classificador de falhas em painéis solares da colônia foi avaliado em 100 casos, com falha como classe positiva: VP = 12, FP = 4, FN = 3 e VN = 81. A equipe precisa relatar a precisão e o recall do modelo para decidir se ele pode substituir a inspeção manual. Quais são esses valores?",[
       ["Precisão 75%; recall 80%.","12/(12+4)=75%; 12/(12+3)=80%."],
       ["Precisão 80%; recall 75%.","Troca os denominadores das duas métricas."],
       ["Precisão 93%; recall 93%.","93% é a acurácia (12+81)/100, não ambas as métricas."],
