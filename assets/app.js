@@ -180,7 +180,7 @@
     chapterSelect.value=selected;
     panel.querySelector('[data-overview]').hidden=selected!=='overview';
     panel.querySelectorAll('.chapter-row').forEach(row=>{row.hidden=actualSubject!=='all'&&row.dataset.subject!==actualSubject;});
-    panel.querySelectorAll('.lesson').forEach(lesson=>{lesson.hidden=lesson.dataset.chapter!==selected;if(!lesson.hidden){globalThis.FIAPMath?.renderIn(lesson);globalThis.FIAPMaps?.enhance(lesson);}});
+    panel.querySelectorAll('.lesson').forEach(lesson=>{lesson.hidden=lesson.dataset.chapter!==selected;if(!lesson.hidden){globalThis.FIAPMath?.renderIn(lesson);globalThis.FIAPMaps?.enhance(lesson);mountLabs(lesson);}});
     get(`mini-${phase.id}`).hidden=selected!=='mini';
     if(selected==='mini') { if(!state.minis[phase.id])mutate(current=>E.startMini(current,phase.id,bank)); renderMini(phase.id); }
     document.querySelectorAll('[data-open-chapter]').forEach(link=>{
@@ -211,6 +211,13 @@
       const details=target.closest('details');if(details)details.open=true;
       target.tabIndex=-1;target.focus({preventScroll:true});scrollToStudy(target);
       globalThis.FIAPMotion?.flash(target);
+    }
+  }
+  function mountLabs(root) {
+    const labs = { bases: globalThis.FIAPBases, surface: globalThis.FIAPSurface };
+    for (const element of root.querySelectorAll('.lab[data-lab]:not([data-mounted])')) {
+      const lab = labs[element.dataset.lab];
+      if (lab?.mount) { element.dataset.mounted = 'true'; lab.mount(element); }
     }
   }
   function roadmapStatus() {

@@ -545,6 +545,50 @@ check("enunciados ricos e fonte detalhada só no resultado", () => {
   assert.equal((plain.match(/class="source-reference"/g) || []).length, 10, "sem contexto continua mostrando a fonte");
 });
 
+check("conversor de bases: passos e resultados", () => {
+  const B = require(join(root, "assets/labs/bases.js"));
+  const binary = B.convert("45", 10, 2);
+  assert.equal(binary.ok, true);
+  assert.equal(binary.result, "101101");
+  assert.equal(binary.method, "divisions");
+  assert.deepEqual(binary.steps.divisions.map(step => [step.dividend, step.quotient, step.remainder]),
+    [["45", "22", 1], ["22", "11", 0], ["11", "5", 1], ["5", "2", 1], ["2", "1", 0], ["1", "0", 1]]);
+  const grouped = B.convert("101101", 2, 16);
+  assert.equal(grouped.result, "2D");
+  assert.equal(grouped.method, "grouping");
+  assert.deepEqual(grouped.steps.groups.bits, ["0010", "1101"]);
+  assert.deepEqual(grouped.steps.groups.digits, ["2", "D"]);
+  const expanded = B.convert("2D", 16, 10);
+  assert.equal(expanded.result, "45");
+  assert.equal(expanded.method, "positional");
+  assert.deepEqual(expanded.steps.expansion.map(step => [step.digit, step.position, step.weight, step.product]), [["2", 1, "16", "32"], ["D", 0, "1", "13"]]);
+  assert.equal(B.convert("1985", 10, 6).result, "13105");
+  assert.equal(B.convert("13105", 6, 10).result, "1985");
+  const fraction = B.convert("0,101", 2, 10);
+  assert.equal(fraction.result, "0,625");
+  assert.deepEqual(fraction.steps.expansion.map(step => step.product), ["0", "0,5", "0", "0,125"]);
+  const periodic = B.convert("0,1", 10, 2);
+  assert.ok(periodic.result.startsWith("0,0001100110"), periodic.result);
+  assert.equal(periodic.periodic, true);
+  assert.deepEqual(periodic.steps.multiplications.slice(0, 4).map(step => step.digit), ["0", "0", "0", "1"]);
+  assert.equal(periodic.steps.multiplications[5].repeats, 2, "0,2 volta na linha 6: a fração da linha 2 se repete");
+  assert.equal(periodic.steps.multiplications[1].repeats, null);
+  assert.equal(B.convert("0,625", 10, 2).result, "0,101");
+  assert.equal(B.convert("0,625", 10, 2).periodic, false);
+  assert.equal(B.convert("3A", 16, 2).result, "111010");
+  assert.equal(B.convert("3a", 16, 2).result, "111010");
+  assert.equal(B.convert("FF", 16, 8).result, "377");
+  assert.equal(B.convert("12,5", 10, 2).result, "1100,1");
+  assert.equal(B.convert("1985", 10, 6).check.includes("1985"), true);
+  const invalid = B.convert("128", 8, 10);
+  assert.equal(invalid.ok, false);
+  assert.match(invalid.error, /\b8\b/);
+  assert.equal(B.convert("12", 17, 10).ok, false);
+  assert.equal(B.convert("", 10, 2).ok, false);
+  assert.equal(B.convert("1G", 16, 10).ok, false);
+  assert.match(read("index.html"), /assets\/labs\/bases\.js/);
+});
+
 check("trilha do semestre consistente", () => {
   const semester = curriculum.semesters[0];
   const roadmap = semester.roadmap;
