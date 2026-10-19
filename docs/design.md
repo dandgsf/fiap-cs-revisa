@@ -30,7 +30,7 @@ O movimento é discreto e explica estado: GSAP abre e fecha ramos dos mapas, des
 - **Trecho citado:** cada parte do resumo mostra “PDF p.” na margem direita quando há espaço, ou ao lado do título em telas estreitas.
 - **Fórmula:** bloco com borda superior magenta, expressão em KaTeX e legenda dos símbolos.
 - **Tabela de passos e conta armada:** a coluna que forma a resposta recebe um véu magenta discreto; a última linha da conta traz o sinal de igual.
-- **Mapa mental:** árvore horizontal com ramos coloridos; vira árvore vertical abaixo de 40rem de largura e sai inteira na impressão.
+- **Mapa mental:** árvore horizontal com ramos coloridos, que abre recolhida (só os ramos, com o número de folhas) para não empurrar o resumo; vira árvore vertical abaixo de 40rem de largura e sai inteira na impressão.
 - **Trilha do semestre:** grade de fases por faixas de assunto, com curvas entre capítulos; passar o mouse ou focar destaca o que o capítulo retoma e prepara. Abaixo de 56rem vira lista com as conexões em texto.
 - **Laboratórios:** conversor de bases com passo a passo e laboratório 3D de gradiente. A visualização 3D só carrega o three.js quando aberta e mantém todos os números numa tabela acessível.
 

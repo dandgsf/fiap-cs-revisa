@@ -37,9 +37,9 @@ Escolha semestre e fase. Dentro da fase, use os assuntos e capítulos do índice
 
 O que ajuda a estudar nesta versão:
 
-- **Menu recolhível.** O botão **Ocultar menu** (ou **Ctrl+B**, **⌘B** no Mac) esconde o índice e libera a largura da página; a escolha fica salva. No celular, o índice abre como gaveta.
+- **Menu recolhível.** O botão **Ocultar menu** (ou **Ctrl+B**, **⌘B** no Mac) esconde o índice e libera a largura da página; a escolha fica salva. No celular, o índice abre como gaveta e só a barra de leitura fica presa no topo ao rolar.
 - **Páginas do PDF por trecho.** Cada parte do resumo mostra “PDF p.” com as páginas exatas de onde a ideia veio, para você conferir no material da disciplina.
-- **Mapas mentais.** Cada capítulo traz um mapa colorido; clique nos ramos para recolher e nas folhas para ver o detalhe.
+- **Mapas mentais.** Cada capítulo traz um mapa colorido que abre só com os ramos, para o resumo aparecer logo abaixo; clique num ramo para abri-lo, nas folhas para ver o detalhe ou em **Mostrar os detalhes** para abrir tudo.
 - **Trilha do semestre.** Acima das fases, a trilha mostra como os assuntos se conectam entre as fases e o que você já leu.
 - **Fórmulas e contas passo a passo.** Fórmulas aparecem destacadas, com a legenda de cada símbolo, e as contas são resolvidas linha a linha, com a conferência de volta.
 - **Laboratórios.** No capítulo de sistemas numéricos, o laboratório de bases converte qualquer número entre as bases 2 e 16 mostrando cada passo. No capítulo de cálculo, o laboratório 3D mostra o gradiente descendente na função de Himmelblau do PDF.
@@ -121,6 +121,6 @@ Cada semestre usa uma chave própria em `localStorage`. Se ainda não houver est
 
 Não há servidor de contas, analytics ou transmissão de respostas. O gabarito está no código offline e o limite de tentativas não é antifraude. Não há coleta de nome ou RM do aluno.
 
-Abas aceitam setas, Home e End; formulários usam rótulos, foco visível e mensagens de incompletude. Resultados não dependem só de cor. O menu recolhe com **Ctrl+B** (fora dos campos de texto), a gaveta do celular fecha com **Esc** e o foco volta ao botão. Mapas mentais e a trilha também têm versão em texto, e o laboratório 3D mostra todos os cálculos numa tabela, mesmo sem WebGL. A impressão expande as revisões, os mapas e as fórmulas e omite os simulados e os laboratórios. Movimento reduzido é respeitado: as animações vão direto ao estado final.
+Abas aceitam setas, Home e End; formulários usam rótulos, foco visível e mensagens de incompletude. Resultados não dependem só de cor. O menu recolhe com **Ctrl+B** (fora dos campos de texto), a gaveta do celular funciona como diálogo (o resto da página fica inerte), fecha com **Esc** ou no fundo escurecido, e o foco volta ao botão. Mapas mentais e a trilha também têm versão em texto, e o laboratório 3D mostra todos os cálculos numa tabela, mesmo sem WebGL. A impressão expande as revisões, os mapas e as fórmulas e omite os simulados e os laboratórios. Movimento reduzido é respeitado: as animações vão direto ao estado final.
 
 A autoria visível fica discretamente no rodapé, com nome abreviado, RM autorizado e link público do GitHub.

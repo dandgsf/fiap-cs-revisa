@@ -4,7 +4,7 @@
 
 Revisão visual e didática.
 
-- Menu de assuntos recolhível pelo botão da barra de leitura ou por Ctrl+B (⌘B no Mac), com a escolha salva no navegador; no celular, o menu abre como gaveta.
+- Menu de assuntos recolhível pelo botão da barra de leitura ou por Ctrl+B (⌘B no Mac), com a escolha salva no navegador; no celular, o menu abre como gaveta modal e só a barra de leitura fica presa no topo.
 - Resumos divididos em trechos com as páginas exatas do PDF de cada ideia, mostradas na margem. Nas práticas e simulados, as páginas aparecem só depois da correção, com link para o trecho correspondente.
 - Explicações de matemática refeitas passo a passo: fórmula destacada com legenda, conta armada, tabela de passos e conferência de volta.
 - Fórmulas renderizadas com KaTeX, que acompanha o pacote e funciona offline.
