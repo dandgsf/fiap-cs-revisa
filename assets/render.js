@@ -24,6 +24,21 @@
     return String(html || "").replace(/<section class="excerpt" data-pages="([^"]+)">/g, (_, pages) =>
       `<section class="excerpt" id="${prefix}-${++count}" data-pages="${pages}"><p class="page-ref"${label ? ` title="${escape(label)}"` : ""}><span>PDF</span> p. ${pages}</p>`);
   }
+  // Mapa mental: listas aninhadas; ramos com filhos e folhas com nota viram botões de abrir/fechar.
+  function mindmap(map, id, colorOffset = 0) {
+    let serial = 0;
+    const node = (item, depth, branch) => {
+      const children = Array.isArray(item.children) && item.children.length ? item.children : null;
+      const target = `${id}-n${++serial}`;
+      const label = `<span class="mm-label">${escape(item.label)}</span>${item.pages ? `<span class="mm-pages">p. ${escape(item.pages)}</span>` : ""}`;
+      let head = `<span class="mm-node mm-leaf">${label}</span>`;
+      if (children) head = `<button type="button" class="mm-node" aria-expanded="true" aria-controls="${target}" data-count="${children.length}">${label}</button>`;
+      else if (item.note) head = `<button type="button" class="mm-node mm-leaf has-note" aria-expanded="false" aria-controls="${target}">${label}</button><span class="mm-note" id="${target}" hidden>${escape(item.note)}</span>`;
+      const style = depth === 1 ? ` style="--branch:var(--map-${(branch + colorOffset) % 6 + 1})"` : "";
+      return `<li class="mm-item depth-${depth}"${style}><div class="mm-head">${head}</div>${children ? `<ul class="mm-children" id="${target}">${children.map(child => node(child, depth + 1, branch)).join("")}</ul>` : ""}</li>`;
+    };
+    return `<figure class="mindmap wide" id="${id}" data-mindmap><figcaption class="mm-caption"><span class="mm-title">Mapa do capítulo</span><button type="button" class="text-button mm-all" data-mm-all aria-pressed="false">Mostrar os detalhes</button></figcaption><div class="mm-canvas"><div class="mm-root">${escape(map.label)}</div><ul class="mm-branches">${map.children.map((child, index) => node(child, 1, index)).join("")}</ul></div></figure>`;
+  }
   function phase(phase, ctx) {
     const context = ctx && typeof ctx === "object" && !Array.isArray(ctx) ? ctx : {};
     const chapters = phase.subjects.flatMap(subject => subject.chapters);
@@ -47,6 +62,7 @@
           <h3 id="heading-${phase.id}-${ch.number}" tabindex="-1">${escape(ch.title)}</h3>
           <p class="lesson-source">${title ? `Fase ${phase.id} · Cap. ${ch.number} — ${escape(title)} · PDF p. ${escape(ch.pages)}` : `Fase ${phase.id} · Capítulo ${ch.number} · PDF, p. ${escape(ch.pages)}`}</p>
           <div class="learning-focus"><strong>Ao revisar, concentre-se em:</strong><p>${escape(ch.focus)}</p></div>
+          ${ch.map ? mindmap(ch.map, `map-${phase.id}-${ch.number}`) : ""}
           ${ch.priority === 'context' ? `<p>${escape(ch.priorityReason)}</p><details class="extension"><summary>Ler o contexto completo do projeto</summary>${body}</details>` : body}
           <section class="worked-example"><h4>Reconstrua o raciocínio</h4>${worked}</section>
           <p class="pitfall"><strong>Cuidado com esta confusão.</strong> ${escape(ch.pitfall)}</p>
@@ -96,5 +112,5 @@
       }).join("")}</div></section>`;
   }
 
-  return Object.freeze({ escape, clock, source, chapterId, pdfTitle, excerpts, phase, form, feedback });
+  return Object.freeze({ escape, clock, source, chapterId, pdfTitle, excerpts, mindmap, phase, form, feedback });
 });

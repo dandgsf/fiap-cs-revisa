@@ -179,7 +179,7 @@
     chapterSelect.value=selected;
     panel.querySelector('[data-overview]').hidden=selected!=='overview';
     panel.querySelectorAll('.chapter-row').forEach(row=>{row.hidden=actualSubject!=='all'&&row.dataset.subject!==actualSubject;});
-    panel.querySelectorAll('.lesson').forEach(lesson=>{lesson.hidden=lesson.dataset.chapter!==selected;if(!lesson.hidden)globalThis.FIAPMath?.renderIn(lesson);});
+    panel.querySelectorAll('.lesson').forEach(lesson=>{lesson.hidden=lesson.dataset.chapter!==selected;if(!lesson.hidden){globalThis.FIAPMath?.renderIn(lesson);globalThis.FIAPMaps?.enhance(lesson);}});
     get(`mini-${phase.id}`).hidden=selected!=='mini';
     if(selected==='mini') { if(!state.minis[phase.id])mutate(current=>E.startMini(current,phase.id,bank)); renderMini(phase.id); }
     document.querySelectorAll('[data-open-chapter]').forEach(link=>{

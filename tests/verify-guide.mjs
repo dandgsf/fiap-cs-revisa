@@ -460,6 +460,58 @@ check("fórmulas renderizáveis e sem barra perdida", () => {
   assert.match(read("assets/app.js"), /FIAPMath\?\.renderIn\(/, "sem KaTeX o guia continua funcionando");
 });
 
+function mapProblems(map, phaseId, chapterNumber) {
+  const problems = [];
+  let nodes = 0;
+  const walk = (node, depth, path) => {
+    nodes++;
+    if (typeof node.label !== "string" || !node.label.trim() || node.label.length > 60) problems.push(`${path}: rótulo vazio ou com mais de 60 caracteres`);
+    if (node.note !== undefined && (typeof node.note !== "string" || node.note.length > 160 || node.note.length < 10)) problems.push(`${path}: nota fora de 10–160 caracteres`);
+    if (node.pages !== undefined) {
+      try { reference({ phase: phaseId, chapter: chapterNumber, pages: node.pages }, path); } catch (error) { problems.push(error.message); }
+    }
+    if (node.children !== undefined) {
+      if (!Array.isArray(node.children) || !node.children.length) problems.push(`${path}: children vazio`);
+      else if (depth >= 3) problems.push(`${path}: mais de 3 níveis abaixo da raiz`);
+      else node.children.forEach((child, i) => walk(child, depth + 1, `${path}/${i + 1}`));
+    }
+  };
+  if (!map || !Array.isArray(map.children) || map.children.length < 3 || map.children.length > 6) problems.push("raiz precisa de 3 a 6 ramos");
+  else walk(map, 0, `mapa ${phaseId}-${chapterNumber}`);
+  if (nodes > 33) problems.push(`${nodes - 1} nós além da raiz (máximo 32)`);
+  return problems;
+}
+
+check("mapas mentais válidos e acessíveis", () => {
+  const sample = { label: "Sistemas <numéricos>", children: [
+    { label: "Notação posicional", pages: "12–21", children: [{ label: "Peso bⁱ", note: "Cada posição vale a base elevada à posição." }, { label: "Zero mantém posições" }] },
+    { label: "Conversões", children: [{ label: "Divisões sucessivas", pages: "33–40" }] },
+    { label: "Bits e bytes", note: "n bits representam 2ⁿ combinações." }
+  ] };
+  assert.deepEqual(mapProblems(sample, 1, 3), []);
+  assert.ok(mapProblems({ label: "x", children: [{ label: "a" }, { label: "b" }] }, 1, 3).length, "menos de 3 ramos");
+  assert.ok(mapProblems({ label: "x", children: [{ label: "a", pages: "99" }, { label: "b" }, { label: "c" }] }, 1, 3).length, "página fora do PDF");
+  const markup = R.mindmap(sample, "map-1-3");
+  assert.equal((markup.match(/<figure class="mindmap wide" id="map-1-3"/g) || []).length, 1);
+  assert.equal((markup.match(/aria-expanded="true"/g) || []).length, 2, "ramos com filhos começam abertos");
+  assert.equal((markup.match(/aria-expanded="false"/g) || []).length, 2, "detalhes das folhas começam fechados");
+  assert.equal((markup.match(/style="--branch:var\(--map-\d\)"/g) || []).length, 3);
+  assert.match(markup, /<span class="mm-pages">p\. 12–21<\/span>/);
+  assert.match(markup, /Sistemas &lt;numéricos&gt;/);
+  const ids = [...markup.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
+  assert.equal(ids.length, new Set(ids).size);
+  for (const [, target] of markup.matchAll(/aria-controls="([^"]+)"/g)) assert.ok(ids.includes(target), target);
+  for (const phase of course.phases) for (const chapter of phase.chapters) {
+    if (chapter.map) assert.deepEqual(mapProblems(chapter.map, phase.id, chapter.number), [], `${phase.id}-${chapter.number}`);
+  }
+  const styles = read("assets/styles.css"), index = read("index.html");
+  assert.match(styles, /@container mindmap \(max-width:\s*40rem\)/);
+  assert.match(styles.slice(styles.lastIndexOf("@media print")), /\.mindmap \[hidden\]/);
+  assert.ok(index.indexOf("assets/maps.js") > index.indexOf("assets/vendor/gsap/gsap.min.js"));
+  assert.ok(index.indexOf("assets/motion.js") > index.indexOf("assets/vendor/gsap/gsap.min.js"));
+  assert.match(read("assets/motion.js"), /prefers-reduced-motion: reduce/);
+});
+
 check("menu lateral retrátil, persistente e acessível", () => {
   assert.equal(E.freshState().sidebar, "expanded");
   const collapsed = { ...ready(), sidebar: "collapsed" };
