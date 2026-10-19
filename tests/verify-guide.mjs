@@ -493,8 +493,11 @@ check("mapas mentais válidos e acessíveis", () => {
   assert.ok(mapProblems({ label: "x", children: [{ label: "a", pages: "99" }, { label: "b" }, { label: "c" }] }, 1, 3).length, "página fora do PDF");
   const markup = R.mindmap(sample, "map-1-3");
   assert.equal((markup.match(/<figure class="mindmap wide" id="map-1-3"/g) || []).length, 1);
-  assert.equal((markup.match(/aria-expanded="true"/g) || []).length, 2, "ramos com filhos começam abertos");
-  assert.equal((markup.match(/aria-expanded="false"/g) || []).length, 2, "detalhes das folhas começam fechados");
+  // Ramos recolhidos ao abrir: o mapa cabe acima da dobra e o resumo aparece na primeira tela.
+  assert.equal((markup.match(/aria-expanded="true"/g) || []).length, 0, "nada começa aberto");
+  assert.equal((markup.match(/aria-expanded="false"/g) || []).length, 4, "ramos e detalhes das folhas começam fechados");
+  assert.equal((markup.match(/<ul class="mm-children" id="[^"]+" hidden>/g) || []).length, 2, "filhos dos ramos ocultos");
+  assert.match(read("assets/maps.js"), /depth-1>\.mm-head>\.mm-node/, "Mostrar os detalhes também abre os ramos");
   assert.equal((markup.match(/style="--branch:var\(--map-\d\)"/g) || []).length, 3);
   assert.match(markup, /<span class="mm-pages">p\. 12–21<\/span>/);
   assert.match(markup, /Sistemas &lt;numéricos&gt;/);
@@ -507,6 +510,10 @@ check("mapas mentais válidos e acessíveis", () => {
   const styles = read("assets/styles.css"), index = read("index.html");
   assert.match(styles, /@container mindmap \(max-width:\s*40rem\)/);
   assert.match(styles.slice(styles.lastIndexOf("@media print")), /\.mindmap \[hidden\]/);
+  assert.match(styles.slice(styles.lastIndexOf("@media print")), /\.mm-node:not\(\.mm-leaf\)\[aria-expanded="false"\]::after\{display:none\}/, "impressão expande e esconde o selo +N");
+  // Alvos de toque de 44px (restrição do projeto), inclusive no menu do topo no celular.
+  for (const rule of [/\.mm-node\{[^}]*min-height:44px/, /\.mm-all\{[^}]*min-height:44px/]) assert.match(styles, rule);
+  assert.doesNotMatch(styles, /\.site-header nav a,\.nav-button\{[^}]*min-height:(?:[0-3]\d|4[0-3])px/);
   assert.ok(index.indexOf("assets/maps.js") > index.indexOf("assets/vendor/gsap/gsap.min.js"));
   assert.ok(index.indexOf("assets/motion.js") > index.indexOf("assets/vendor/gsap/gsap.min.js"));
   assert.match(read("assets/motion.js"), /prefers-reduced-motion: reduce/);
@@ -517,6 +524,8 @@ check("enunciados ricos e fonte detalhada só no resultado", () => {
   assert.doesNotMatch(rich, /<b>/);
   assert.match(rich, /&lt;b&gt;x&lt;\/b&gt;/);
   assert.match(rich, /<code>a&lt;b<\/code>/);
+  // Enunciados de 2–4 frases em peso normal: negrito em bloco cansa a leitura.
+  for (const prompt of [".question-prompt", ".review-prompt"]) assert.doesNotMatch(read("assets/styles.css"), new RegExp(`\\${prompt}\\{[^}]*font-weight:[6-9]00`));
   assert.match(rich, /<pre><code>for i in range\(3\):\n    print\(i\)<\/code><\/pre>/);
   assert.match(rich, /<p>Depois responda\.<\/p>/);
   assert.equal(R.rich("Só `x` aqui", { inline: true }), "Só <code>x</code> aqui");
@@ -710,6 +719,10 @@ check("menu lateral retrátil, persistente e acessível", () => {
   assert.match(styles, /\.library-layout\[data-sidebar="collapsed"\]/);
   assert.match(styles, /\.drawer-open\s+\.library-sidebar/);
   assert.match(styles, /container-type:\s*inline-size/);
+  // No celular só a barra de leitura fica presa: o cabeçalho rola junto e o deslocamento medido vira zero.
+  assert.match(styles, /@media\(max-width:760px\)\{:root\{--header-offset:0px\}/);
+  assert.match(styles, /@media\(max-width:760px\)[^@]*\.site-header\{position:static/);
+  assert.match(app, /getComputedStyle\(header\)\.position === 'sticky'/);
 });
 
 check("bibliotecas de terceiros fixadas por hash", () => {

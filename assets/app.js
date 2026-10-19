@@ -351,12 +351,16 @@
   get('sidebar-backdrop').addEventListener('click', () => setDrawer(false));
   compact.addEventListener('change', () => { drawerOpen = false; applySidebar(); });
   requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector('.library-layout').classList.add('is-ready')));
-  const offsets = new ResizeObserver(() => {
+  const header = document.querySelector('.site-header'), toolbar = document.querySelector('.reading-toolbar');
+  // No celular o cabeçalho rola junto (position: static): só a barra de leitura desconta altura.
+  const measureOffsets = () => {
     const root = document.documentElement.style;
-    root.setProperty('--header-offset', `${document.querySelector('.site-header').getBoundingClientRect().height}px`);
-    root.setProperty('--toolbar-offset', `${document.querySelector('.reading-toolbar').getBoundingClientRect().height}px`);
-  });
-  offsets.observe(document.querySelector('.site-header'));
-  offsets.observe(document.querySelector('.reading-toolbar'));
+    root.setProperty('--header-offset', `${getComputedStyle(header).position === 'sticky' ? header.getBoundingClientRect().height : 0}px`);
+    root.setProperty('--toolbar-offset', `${toolbar.getBoundingClientRect().height}px`);
+  };
+  const offsets = new ResizeObserver(measureOffsets);
+  offsets.observe(header);
+  offsets.observe(toolbar);
+  compact.addEventListener('change', measureOffsets);
   window.setInterval(tick,1000);
 })();

@@ -61,7 +61,7 @@
 
   // ---------- Leitura numérica (sempre visível, sem depender de WebGL) ----------
 
-  const fmt = (value, digits = 3) => { const number = Number(value); return (Math.abs(number) < 0.5 * 10 ** -digits ? 0 : number).toLocaleString("pt-BR", { maximumFractionDigits: digits }); };
+  const fmt = (value, digits = 3) => { const number = Number(value); return (Math.abs(number) < 0.5 * 10 ** -digits ? 0 : number).toLocaleString("pt-BR", { maximumFractionDigits: digits }).replace("-", "−"); };
   const signed = value => (value < 0 ? "− " : "+ ") + fmt(Math.abs(value));
   const pair = (a, b, digits = 3) => `(${fmt(a, digits)}; ${fmt(b, digits)})`;
   // η com até 2 algarismos significativos: o valor exibido é exatamente o usado na conta.

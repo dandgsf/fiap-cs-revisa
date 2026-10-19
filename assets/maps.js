@@ -27,7 +27,8 @@
     const open = button.getAttribute("aria-pressed") !== "true";
     button.setAttribute("aria-pressed", String(open));
     button.textContent = open ? "Ocultar os detalhes" : "Mostrar os detalhes";
-    for (const leaf of figure.querySelectorAll(".mm-node.has-note")) setOpen(leaf, open, false);
+    // Ramos começam recolhidos (o resumo cabe na primeira tela); "Mostrar os detalhes" abre ramos e notas.
+    for (const node of figure.querySelectorAll(".depth-1>.mm-head>.mm-node[aria-controls], .mm-node.has-note")) setOpen(node, open, false);
   }
 
   function enhance(root) {

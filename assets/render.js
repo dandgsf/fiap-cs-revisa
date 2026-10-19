@@ -32,10 +32,10 @@
       const target = `${id}-n${++serial}`;
       const label = `<span class="mm-label">${escape(item.label)}</span>${item.pages ? `<span class="mm-pages">p. ${escape(item.pages)}</span>` : ""}`;
       let head = `<span class="mm-node mm-leaf">${label}</span>`;
-      if (children) head = `<button type="button" class="mm-node" aria-expanded="true" aria-controls="${target}" data-count="${children.length}">${label}</button>`;
+      if (children) head = `<button type="button" class="mm-node" aria-expanded="${depth > 1}" aria-controls="${target}" data-count="${children.length}">${label}</button>`;
       else if (item.note) head = `<button type="button" class="mm-node mm-leaf has-note" aria-expanded="false" aria-controls="${target}">${label}</button><span class="mm-note" id="${target}" hidden>${escape(item.note)}</span>`;
       const style = depth === 1 ? ` style="--branch:var(--map-${(branch + colorOffset) % 6 + 1})"` : "";
-      return `<li class="mm-item depth-${depth}"${style}><div class="mm-head">${head}</div>${children ? `<ul class="mm-children" id="${target}">${children.map(child => node(child, depth + 1, branch)).join("")}</ul>` : ""}</li>`;
+      return `<li class="mm-item depth-${depth}"${style}><div class="mm-head">${head}</div>${children ? `<ul class="mm-children" id="${target}"${depth > 1 ? "" : " hidden"}>${children.map(child => node(child, depth + 1, branch)).join("")}</ul>` : ""}</li>`;
     };
     return `<figure class="mindmap wide" id="${id}" data-mindmap><figcaption class="mm-caption"><span class="mm-title">Mapa do capítulo</span><button type="button" class="text-button mm-all" data-mm-all aria-pressed="false">Mostrar os detalhes</button></figcaption><div class="mm-canvas"><div class="mm-root">${escape(map.label)}</div><ul class="mm-branches">${map.children.map((child, index) => node(child, 1, index)).join("")}</ul></div></figure>`;
   }
