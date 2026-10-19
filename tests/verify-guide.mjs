@@ -589,6 +589,28 @@ check("conversor de bases: passos e resultados", () => {
   assert.match(read("index.html"), /assets\/labs\/bases\.js/);
 });
 
+check("gradiente: núcleo numérico do laboratório 3D", () => {
+  const S = require(join(root, "assets/labs/surface.js"));
+  assert.deepEqual(S.functions.himmelblau.grad(-10, 10), [-3794, 3518]);
+  assert.equal(S.functions.himmelblau.f(-10, 10), 16690);
+  assert.deepEqual(S.functions.bowl.grad(1, 2), [2, 4]);
+  assert.deepEqual(S.tangentPlane("bowl", 1, 2), { f0: 5, gx: 2, gy: 4 });
+  const run = S.descent("himmelblau", -10, 10, S.functions.himmelblau.eta, 400);
+  assert.equal(run.diverged, false);
+  const [x, y, value] = run.path.at(-1);
+  assert.ok(value < 1e-3, "termina perto de um mínimo");
+  assert.ok(S.functions.himmelblau.minima.some(([mx, my]) => Math.hypot(x - mx, y - my) < 0.05), `${x}, ${y}`);
+  assert.ok(run.path.length <= 401);
+  assert.deepEqual(run.path[0], [-10, 10, 16690]);
+  const other = S.descent("himmelblau", -10, 10, 0.003, 400).path.at(-1);
+  assert.ok(Math.hypot(other[0] - 3.5844, other[1] + 1.8481) < 0.05, "η maior leva a outro mínimo");
+  assert.equal(S.descent("himmelblau", -10, 10, 0.05, 400).diverged, true);
+  assert.equal(S.descent("bowl", 3, -2, 0.1, 200).diverged, false);
+  assert.match(read("assets/labs/surface.js"), /assets\/vendor\/three\/three\.min\.js/);
+  assert.doesNotMatch(read("index.html"), /three\.min\.js/, "three.js carrega só ao abrir o laboratório");
+  assert.match(read("index.html"), /assets\/labs\/surface\.js/);
+});
+
 check("trilha do semestre consistente", () => {
   const semester = curriculum.semesters[0];
   const roadmap = semester.roadmap;
