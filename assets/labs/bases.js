@@ -13,7 +13,7 @@
 
   // ---------- Núcleo: aritmética exata com BigInt (inteiros e frações racionais) ----------
 
-  function parse(text, base) {
+  function parse(text, base, { limit = true } = {}) {
     const raw = String(text ?? "").trim().replace(/[\s_]/g, "").toUpperCase();
     if (!raw) return { error: "Digite um número." };
     if (raw.startsWith("-")) return { error: "Use números sem sinal: o laboratório trata da representação do valor." };
@@ -26,7 +26,7 @@
       if (value < 0) return { error: `O símbolo "${char}" não é um algarismo válido nas bases de 2 a 16.` };
       if (value >= base) return { error: `O algarismo ${char} não existe na base ${base}: ela usa ${base <= 10 ? `de 0 a ${base - 1}` : `de 0 a 9 e de A a ${DIGITS[base - 1]}`}.` };
     }
-    if (int.length + frac.length > 24) return { error: "Use até 24 algarismos." };
+    if (limit && int.length + frac.length > 24) return { error: "Use até 24 algarismos." };
     return { int: int.replace(/^0+(?=.)/, "") || "0", frac: frac.replace(/0+$/, "") };
   }
 
@@ -151,7 +151,7 @@
 
   // Conferência: o resultado, expandido na base de destino, precisa voltar ao mesmo valor.
   function check(answer) {
-    const parsed = parse(answer.result, answer.to);
+    const parsed = parse(answer.result, answer.to, { limit: false });
     if (parsed.error) return "";
     const terms = expand(parsed, answer.to).steps.filter(step => step.value).map(step => `${step.digit === String(step.value) ? step.value : `${step.digit}(${step.value})`}·${answer.to}${sup(step.position)}`);
     const back = expand(parsed, answer.to), value = decimalString(back.integer * back.den + back.num, back.den, 12);
@@ -192,10 +192,10 @@
       blocks.push(`<div class="table-scroll"><table class="steps lab-table"><caption>${escapeHtml(answer.input)}${sub(from)}: algarismo × peso da posição</caption><thead><tr><th>Algarismo</th><th>Posição</th><th>Peso ${from}<sup>posição</sup></th><th>Produto</th></tr></thead><tbody>${steps.expansion.map(step => `<tr data-step><td>${step.digit}${step.digit !== String(step.value) ? ` <span class="step-muted">(${step.value})</span>` : ""}</td><td class="step-muted">${step.position}</td><td>${step.weight}</td><td class="step-key">${step.product}</td></tr>`).join("")}</tbody></table></div><p class="lab-sum" data-step>Soma dos produtos: <strong>${answer.decimal}</strong> em base 10</p>`);
     }
     if (steps.divisions && steps.divisions.length) {
-      blocks.push(`<div class="table-scroll"><table class="steps lab-table" data-read="up"><caption>Parte inteira dividida sucessivamente por ${to}</caption><thead><tr><th>Dividendo</th><th>÷ ${to} = quociente</th><th>Resto</th></tr></thead><tbody>${steps.divisions.map((step, index, all) => `<tr data-step${index === all.length - 1 ? ' class="step-final"' : ""}><td>${step.dividend}</td><td>${step.quotient}</td><td class="step-key">${step.remainder}${step.digit !== String(step.remainder) ? ` <span class="step-muted">= ${step.digit}</span>` : ""}</td></tr>`).join("")}</tbody></table></div><p class="read-order" data-step>Leia os restos de baixo para cima.</p>`);
+      blocks.push(`<div class="table-scroll"><table class="steps lab-table" data-read-order="up"><caption>Parte inteira dividida sucessivamente por ${to}</caption><thead><tr><th>Dividendo</th><th>÷ ${to} = quociente</th><th>Resto</th></tr></thead><tbody>${steps.divisions.map((step, index, all) => `<tr data-step${index === all.length - 1 ? ' class="step-final"' : ""}><td>${step.dividend}</td><td>${step.quotient}</td><td class="step-key">${step.remainder}${step.digit !== String(step.remainder) ? ` <span class="step-muted">= ${step.digit}</span>` : ""}</td></tr>`).join("")}</tbody></table></div><p class="read-order" data-step>Leia os restos de baixo para cima.</p>`);
     }
     if (steps.multiplications) {
-      blocks.push(`<div class="table-scroll"><table class="steps lab-table" data-read="down"><caption>Parte fracionária multiplicada sucessivamente por ${to}</caption><thead><tr><th>Fração</th><th>× ${to}</th><th>Parte inteira</th></tr></thead><tbody>${steps.multiplications.map(step => `<tr data-step${step.repeats ? ' class="step-repeat"' : ""}><td>${step.value}${step.repeats ? ` <span class="step-muted">(igual à linha ${step.repeats})</span>` : ""}</td><td>${step.product}</td><td class="step-key">${step.digit}</td></tr>`).join("")}</tbody></table></div><p class="read-order" data-step>Leia as partes inteiras de cima para baixo${answer.periodic ? ". A fração se repete: a representação é periódica e foi cortada." : answer.truncated ? ". O cálculo parou no limite de algarismos." : "."}</p>`);
+      blocks.push(`<div class="table-scroll"><table class="steps lab-table" data-read-order="down"><caption>Parte fracionária multiplicada sucessivamente por ${to}</caption><thead><tr><th>Fração</th><th>× ${to}</th><th>Parte inteira</th></tr></thead><tbody>${steps.multiplications.map(step => `<tr data-step${step.repeats ? ' class="step-repeat"' : ""}><td>${step.value}${step.repeats ? ` <span class="step-muted">(igual à linha ${step.repeats})</span>` : ""}</td><td>${step.product}</td><td class="step-key">${step.digit}</td></tr>`).join("")}</tbody></table></div><p class="read-order" data-step>Leia as partes inteiras de cima para baixo${answer.periodic ? ". A fração se repete: a representação é periódica e foi cortada." : answer.truncated ? ". O cálculo parou no limite de algarismos." : "."}</p>`);
     }
     return blocks.join("");
   }
@@ -248,8 +248,8 @@
 
   // Momento principal: os restos são lidos na ordem certa enquanto o resultado se forma, algarismo por algarismo.
   function readOut(output, animate) {
-    const integer = [...output.querySelectorAll("table[data-read='up'] .step-key")].reverse();
-    const fraction = [...output.querySelectorAll("table[data-read='down'] .step-key")];
+    const integer = [...output.querySelectorAll("table[data-read-order='up'] .step-key")].reverse();
+    const fraction = [...output.querySelectorAll("table[data-read-order='down'] .step-key")];
     const cells = [...integer, ...fraction];
     const digits = [...output.querySelectorAll(".lab-digit")];
     if (!animate || motion().reduced() || !globalThis.gsap) { cells.forEach(cell => cell.classList.add("is-read")); return; }

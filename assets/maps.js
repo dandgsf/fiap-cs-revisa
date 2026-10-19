@@ -42,10 +42,14 @@
         else if (button.classList.contains("mm-node")) setOpen(button, button.getAttribute("aria-expanded") !== "true");
       });
       if (motion().reduced() || typeof IntersectionObserver !== "function") continue;
+      // Oculta antes da primeira pintura e revela ao entrar na tela: nós já visíveis não piscam.
+      const nodes = figure.querySelectorAll(".mm-root, .mm-node");
+      globalThis.gsap.set(nodes, { autoAlpha: 0 });
       const observer = new IntersectionObserver(entries => {
         if (!entries.some(entry => entry.isIntersecting)) return;
         observer.disconnect();
-        motion().reveal(figure.querySelectorAll(".mm-root, .mm-node"));
+        globalThis.gsap.set(nodes, { clearProps: "opacity,visibility" });
+        motion().reveal(nodes);
       }, { threshold: 0.15 });
       observer.observe(figure);
     }

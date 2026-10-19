@@ -52,7 +52,7 @@
     loading ||= new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = "assets/vendor/three/three.min.js";
-      script.onload = () => globalThis.THREE ? resolve(globalThis.THREE) : reject(new Error("three.js indisponível"));
+      script.onload = () => { if (globalThis.THREE) resolve(globalThis.THREE); else { loading = null; reject(new Error("three.js indisponível")); } };
       script.onerror = () => { loading = null; reject(new Error("three.js não carregou")); };
       document.head.appendChild(script);
     });
@@ -235,6 +235,8 @@
     // Arrastar gira a câmera; clicar sem arrastar escolhe o ponto inicial na superfície.
     let drag = null;
     canvas.addEventListener("pointerdown", event => { drag = { x: event.clientX, y: event.clientY, moved: 0 }; canvas.setPointerCapture(event.pointerId); });
+    // Arrasto interrompido pelo sistema (gesto, alerta, troca de aba) não pode deixar a câmera girando no hover.
+    for (const type of ["pointercancel", "lostpointercapture"]) canvas.addEventListener(type, () => { drag = null; });
     canvas.addEventListener("pointermove", event => {
       if (!drag) return;
       const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
@@ -327,14 +329,15 @@
       button.disabled = true; button.textContent = "Carregando a visualização…";
       try {
         const THREE = await loadThree();
-        scene = createScene(element, THREE);
+        const created = createScene(element, THREE);
+        if (created) { created.buildSurface(state.fn); created.resize(); created.showRun(state); }
+        scene = created;
         element.querySelector(".surface-poster").remove();
-        if (!scene) return;
-        element.querySelector(".surface-tools").hidden = false;
-        scene.buildSurface(state.fn); scene.resize(); scene.showRun(state);
+        if (scene) element.querySelector(".surface-tools").hidden = false;
       } catch {
         button.disabled = false; button.textContent = "Tentar de novo";
-        element.querySelector(".surface-poster p").textContent = "Não foi possível carregar a visualização 3D. A tabela abaixo continua com todos os cálculos.";
+        const note = element.querySelector(".surface-poster p");
+        if (note) note.textContent = "Não foi possível carregar a visualização 3D. A tabela abaixo continua com todos os cálculos.";
       }
     });
     reset("himmelblau");

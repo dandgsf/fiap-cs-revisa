@@ -33,13 +33,28 @@
   }
   const compact = matchMedia('(max-width:760px)');
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
-  let drawerOpen = false, drawerReturn = null;
+  let drawerOpen = false, drawerReturn = null, pageInert = [];
+  // Gaveta aberta no celular é modal: o resto da página fica inerte, menos o fundo, que fecha a gaveta ao clicar.
+  function setPageInert(on) {
+    pageInert.forEach(node => { node.inert = false; });
+    pageInert = [];
+    if (!on) return;
+    const aside = get('library-sidebar'), backdrop = get('sidebar-backdrop');
+    for (let node = aside; node.parentElement && node !== document.body; node = node.parentElement)
+      for (const sibling of node.parentElement.children)
+        if (sibling !== node && !sibling.contains(backdrop) && !sibling.inert && sibling.tagName !== 'SCRIPT') { sibling.inert = true; pageInert.push(sibling); }
+  }
   function applySidebar() {
     const layout = document.querySelector('.library-layout'), aside = get('library-sidebar'), toggle = get('sidebar-toggle');
     const collapsed = state.sidebar === 'collapsed';
-    const visible = compact.matches ? drawerOpen : !collapsed;
+    const visible = compact.matches ? drawerOpen : !collapsed, modal = compact.matches && drawerOpen;
     layout.dataset.sidebar = collapsed ? 'collapsed' : 'expanded';
-    document.documentElement.classList.toggle('drawer-open', compact.matches && drawerOpen);
+    document.documentElement.classList.toggle('drawer-open', modal);
+    setPageInert(modal);
+    if (modal) { aside.setAttribute('role', 'dialog'); aside.setAttribute('aria-modal', 'true'); }
+    else { aside.removeAttribute('role'); aside.removeAttribute('aria-modal'); }
+    // Menu some com o foco dentro: o foco vai para o botão que o reabre, nunca para o <body>.
+    if (!visible && aside.contains(document.activeElement)) toggle.focus({preventScroll:true});
     aside.inert = !visible;
     toggle.setAttribute('aria-expanded', String(visible));
     get('sidebar-close').setAttribute('aria-expanded', String(visible));

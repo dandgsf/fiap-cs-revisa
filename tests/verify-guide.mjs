@@ -586,6 +586,10 @@ check("conversor de bases: passos e resultados", () => {
   const B = require(join(root, "assets/labs/bases.js"));
   const binary = B.convert("45", 10, 2);
   assert.equal(binary.ok, true);
+  // A conferência vale também para resultados com mais de 24 algarismos (o limite é só da entrada).
+  const big = B.convert("99999999", 10, 2);
+  assert.ok(big.result.length > 24 && big.check !== "", "conferência de resultado longo");
+  assert.doesNotMatch(read("assets/labs/bases.js"), /data-read="/, "tabelas do laboratório não colidem com a marcação de leitura");
   assert.equal(binary.result, "101101");
   assert.equal(binary.method, "divisions");
   assert.deepEqual(binary.steps.divisions.map(step => [step.dividend, step.quotient, step.remainder]),
@@ -723,6 +727,10 @@ check("menu lateral retrátil, persistente e acessível", () => {
   assert.match(styles, /@media\(max-width:760px\)\{:root\{--header-offset:0px\}/);
   assert.match(styles, /@media\(max-width:760px\)[^@]*\.site-header\{position:static/);
   assert.match(app, /getComputedStyle\(header\)\.position === 'sticky'/);
+  // Foco nunca fica preso num menu oculto; com a gaveta aberta, o resto da página fica inerte (o fundo continua clicável).
+  assert.match(app, /aside\.contains\(document\.activeElement\)/);
+  assert.match(app, /aria-modal/);
+  assert.match(app, /contains\(backdrop\)/);
 });
 
 check("bibliotecas de terceiros fixadas por hash", () => {
