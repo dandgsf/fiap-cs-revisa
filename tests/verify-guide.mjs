@@ -512,6 +512,39 @@ check("mapas mentais válidos e acessíveis", () => {
   assert.match(read("assets/motion.js"), /prefers-reduced-motion: reduce/);
 });
 
+check("enunciados ricos e fonte detalhada só no resultado", () => {
+  const rich = R.rich("Veja <b>x</b> e `a<b`.\n\n```\nfor i in range(3):\n    print(i)\n```\nDepois responda.");
+  assert.doesNotMatch(rich, /<b>/);
+  assert.match(rich, /&lt;b&gt;x&lt;\/b&gt;/);
+  assert.match(rich, /<code>a&lt;b<\/code>/);
+  assert.match(rich, /<pre><code>for i in range\(3\):\n    print\(i\)<\/code><\/pre>/);
+  assert.match(rich, /<p>Depois responda\.<\/p>/);
+  assert.equal(R.rich("Só `x` aqui", { inline: true }), "Só <code>x</code> aqui");
+  const fixture = [{ id: 1, chapters: [{ number: 3, body: '<section class="excerpt" data-pages="12–19"><p>a</p></section><section class="excerpt" data-pages="33–40"><p>b</p></section>', worked: '<section class="excerpt" data-pages="26"><p>c</p></section>', extension: "" }] }];
+  assert.equal(R.excerptFor(fixture, { phase: 1, chapter: 3, pages: "36" }), "ex-1-3-2");
+  assert.equal(R.excerptFor(fixture, { phase: 1, chapter: 3, pages: "26" }), "wk-1-3-1");
+  assert.equal(R.excerptFor(fixture, { phase: 1, chapter: 3, pages: "50–51" }), null);
+  const state = ready();
+  const quiz = E.startFinal(state, bank, rng(23));
+  const questions = bank.finals.find(set => set.id === quiz.setId).questions;
+  const form = R.form(quiz, questions, "rich", "final", 0);
+  assert.equal((form.match(/class="question-prompt"/g) || []).length, 10);
+  for (const item of quiz.items) assert.match(form, new RegExp(`aria-labelledby="rich-${item.id}-legend rich-${item.id}-prompt"`));
+  assert.doesNotMatch(form, /page-ref|source-reference|PDF|Rever o trecho/);
+  finish(quiz, questions);
+  const phases = course.phases.map(phase => ({ ...phase, chapters: phase.chapters.map(ch => ({ ...ch, body: `<section class="excerpt" data-pages="${ch.pages}"><p>x</p></section>` })) }));
+  const feedback = R.feedback(quiz, questions, E, "rich", { sources, phases });
+  assert.equal((feedback.match(/class="source-reference"/g) || []).length, 10);
+  for (const q of questions) {
+    const segment = feedback.split(`id="review-rich-${q.id}"`)[1].split("</article>")[0];
+    assert.ok(segment.includes(`Cap. ${q.source.chapter} — ${R.escape(R.pdfTitle(sources, q.phase, q.source.chapter))} · p. ${q.source.pages}`), q.id);
+    assert.match(segment, new RegExp(`data-review-excerpt="ex-${q.phase}-${q.source.chapter}-1"[^>]*>Rever o trecho`));
+  }
+  assert.match(feedback, /Seu caderno de erros|Agora explique/);
+  const plain = R.feedback(quiz, questions, E, "rich");
+  assert.equal((plain.match(/class="source-reference"/g) || []).length, 10, "sem contexto continua mostrando a fonte");
+});
+
 check("trilha do semestre consistente", () => {
   const semester = curriculum.semesters[0];
   const roadmap = semester.roadmap;

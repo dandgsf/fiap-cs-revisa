@@ -112,6 +112,31 @@
     </section>`;
   }
 
+  // Texto das questões: tudo é escapado; depois, `trecho` vira <code> e blocos ``` viram <pre><code>.
+  function rich(text, { inline = false } = {}) {
+    const inlineCode = value => escape(value).replace(/`([^`\n]+)`/g, (_, code) => `<code>${code}</code>`);
+    const value = String(text ?? "");
+    if (inline) return inlineCode(value);
+    return value.split(/```[\w-]*\n?([\s\S]*?)```/).map((part, index) => index % 2
+      ? `<pre><code>${escape(part.replace(/\n$/, ""))}</code></pre>`
+      : part.split(/\n\s*\n/).map(block => block.trim()).filter(Boolean).map(block => `<p>${inlineCode(block).replace(/\n/g, "<br>")}</p>`).join("")).join("");
+  }
+  const ranges = pages => String(pages).split(/[,;]/).map(part => part.trim().split(/[–-]/).map(Number)).map(([from, to]) => [from, Number.isFinite(to) ? to : from]);
+  const overlaps = (a, b) => ranges(a).some(([a1, a2]) => ranges(b).some(([b1, b2]) => a1 <= b2 && b1 <= a2));
+  // Primeiro trecho citado do capítulo (resumo, exemplo, aprofundamento) que cobre as páginas da questão.
+  function excerptFor(phases, src) {
+    const chapter = (phases || []).find(item => item.id === src.phase)?.chapters.find(item => item.number === src.chapter);
+    if (!chapter) return null;
+    for (const [prefix, html] of [["ex", chapter.body], ["wk", chapter.worked], ["xt", chapter.extension]]) {
+      let count = 0;
+      for (const [, pages] of String(html || "").matchAll(/<section class="excerpt" data-pages="([^"]+)">/g)) {
+        count++;
+        if (overlaps(pages, src.pages)) return `${prefix}-${src.phase}-${src.chapter}-${count}`;
+      }
+    }
+    return null;
+  }
+
   function form(quiz, questions, key, kind, reference) {
     if (quiz.submitted) return "";
     const byId = new Map(questions.map(question => [question.id, question]));
@@ -120,31 +145,40 @@
       <p class="answer-count" id="count-${key}" aria-live="polite">${answered} de ${quiz.items.length} respondidas</p>
       <div class="question-list">${quiz.items.map((item, index) => {
         const question = byId.get(item.id);
-        return `<fieldset class="question" id="${key}-${item.id}"><legend><span class="question-number">${index + 1} / ${quiz.items.length}</span><span class="question-meta">Fase ${question.phase} · ${escape(question.competency)} · ${escape(question.level)}</span><strong>${escape(question.prompt)}</strong></legend>
-          <div class="options">${item.optionOrder.map((originalIndex, visibleIndex) => `<label class="option"><input type="radio" name="${key}-${item.id}" data-question="${item.id}" value="${originalIndex}" ${quiz.answers[item.id] === originalIndex ? "checked" : ""}><span class="option-letter" aria-hidden="true">${String.fromCharCode(65 + visibleIndex)}</span><span>${escape(question.options[originalIndex])}</span></label>`).join("")}</div></fieldset>`;
+        const id = `${key}-${item.id}`;
+        return `<fieldset class="question" id="${id}" aria-labelledby="${id}-legend ${id}-prompt"><legend id="${id}-legend"><span class="question-number">${index + 1} / ${quiz.items.length}</span><span class="question-meta">Fase ${question.phase} · ${escape(question.competency)} · ${escape(question.level)}</span></legend><div class="question-prompt" id="${id}-prompt">${rich(question.prompt)}</div>
+          <div class="options">${item.optionOrder.map((originalIndex, visibleIndex) => `<label class="option"><input type="radio" name="${key}-${item.id}" data-question="${item.id}" value="${originalIndex}" ${quiz.answers[item.id] === originalIndex ? "checked" : ""}><span class="option-letter" aria-hidden="true">${String.fromCharCode(65 + visibleIndex)}</span><span>${rich(question.options[originalIndex], { inline: true })}</span></label>`).join("")}</div></fieldset>`;
       }).join("")}</div>
       <p class="quiz-status" id="status-${key}" role="alert" hidden></p>
       <div class="exam-actions"><button class="button button-primary" type="submit">Enviar ${quiz.items.length} respostas</button><span>A correção aparece somente após responder todas.</span></div>
     </form>`;
   }
 
-  function feedback(quiz, questions, engine, key) {
+  function feedback(quiz, questions, engine, key, ctx) {
     if (!quiz.submitted) return "";
+    const context = ctx && typeof ctx === "object" ? ctx : {};
     const result = engine.grade(quiz, questions);
     const missed = result.details.filter(item => !item.correct);
+    // A fonte só aparece aqui, depois da correção: título do PDF, páginas e o trecho do resumo que cobre a questão.
+    const citation = question => {
+      const title = context.sources ? pdfTitle(context.sources, question.phase, question.source.chapter) : "";
+      const target = excerptFor(context.phases, question.source);
+      const where = title ? `Fase ${question.phase} · Cap. ${question.source.chapter} — ${escape(title)} · p. ${escape(question.source.pages)}` : escape(source(question.source));
+      return `<p class="source-reference"><span class="source-label">Fonte no PDF</span> ${where}. <a href="#${target || chapterId(question.phase, question.source.chapter)}" data-review-phase="${question.phase}" data-review-chapter="${question.source.chapter}"${target ? ` data-review-excerpt="${target}"` : ""}>${target ? "Rever o trecho" : "Rever o capítulo"}</a></p>`;
+    };
     return `<section class="quiz-result" aria-labelledby="result-${key}"><div class="result-summary"><div class="score-number"><strong>${Number(result.score.toFixed(1)).toLocaleString("pt-BR")}</strong><span>/ 10</span></div><div><h3 id="result-${key}" tabindex="-1">${result.correct} de ${result.total} respostas corretas</h3><p>${missed.length ? "Use os erros como roteiro: releia a explicação, refaça o raciocínio e volte ao capítulo indicado." : "Agora explique por que as outras alternativas estão incorretas. Isso ajuda a consolidar o raciocínio."}</p></div></div>
       <div class="competency-breakdown"><h4>Acertos por competência nesta tentativa</h4><ul>${Object.entries(result.competencies).map(([name, group]) => `<li><span>${escape(name)}</span><strong>${group.correct} / ${group.total}</strong></li>`).join("")}</ul></div>
-      ${missed.length ? `<nav class="error-notebook" aria-label="Questões para revisar"><h4>Seu caderno de erros</h4><ul>${missed.map(item => `<li><a href="#review-${key}-${item.question.id}">${escape(item.question.competency)} · questão ${quiz.items.findIndex(q => q.id === item.question.id) + 1}</a></li>`).join("")}</ul></nav>` : ""}
+      ${missed.length ? `<nav class="error-notebook" aria-label="Questões para revisar"><h4>Seu caderno de erros</h4><ul>${missed.map(item => `<li><a href="#review-${key}-${item.question.id}">${escape(item.question.competency)} · questão ${quiz.items.findIndex(q => q.id === item.question.id) + 1} · Cap. ${item.question.source.chapter}, p. ${escape(item.question.source.pages)}</a></li>`).join("")}</ul></nav>` : ""}
       <div class="answer-review">${result.details.map((item, index) => {
         const { question, selected, correct, optionOrder } = item;
         const letter = String.fromCharCode(65 + optionOrder.indexOf(question.correctIndex));
-        return `<article class="review-item ${correct ? "is-correct" : "is-wrong"}" id="review-${key}-${question.id}"><p class="review-verdict">Questão ${index + 1} · ${correct ? "Acerto" : "Revisar: resposta incorreta"}</p><h4>${escape(question.prompt)}</h4><p><strong>Alternativa correta: ${letter}.</strong> ${escape(question.explanation)}</p><ul class="review-options">${optionOrder.map((originalIndex, visibleIndex) => {
+        return `<article class="review-item ${correct ? "is-correct" : "is-wrong"}" id="review-${key}-${question.id}"><p class="review-verdict">Questão ${index + 1} · ${correct ? "Acerto" : "Revisar: resposta incorreta"}</p><div class="review-prompt">${rich(question.prompt)}</div><p><strong>Alternativa correta: ${letter}.</strong> ${rich(question.explanation, { inline: true })}</p><ul class="review-options">${optionOrder.map((originalIndex, visibleIndex) => {
           const isCorrect = originalIndex === question.correctIndex;
           const chosen = originalIndex === selected;
-          return `<li class="${isCorrect ? "correct-option" : chosen ? "chosen-wrong" : "other-option"}"><strong>${String.fromCharCode(65 + visibleIndex)}. ${escape(question.options[originalIndex])}</strong><span class="option-verdict">${isCorrect ? chosen ? "Sua resposta · correta" : "Alternativa correta" : chosen ? "Sua resposta · incorreta" : "Alternativa incorreta"}</span><p>${escape(question.rationales[originalIndex])}</p></li>`;
-        }).join("")}</ul><p class="source-reference">Fonte: ${escape(source(question.source))}. <a href="#${chapterId(question.phase, question.source.chapter)}" data-review-phase="${question.phase}" data-review-chapter="${question.source.chapter}">Rever o capítulo</a></p></article>`;
+          return `<li class="${isCorrect ? "correct-option" : chosen ? "chosen-wrong" : "other-option"}"><strong>${String.fromCharCode(65 + visibleIndex)}. ${rich(question.options[originalIndex], { inline: true })}</strong><span class="option-verdict">${isCorrect ? chosen ? "Sua resposta · correta" : "Alternativa correta" : chosen ? "Sua resposta · incorreta" : "Alternativa incorreta"}</span><p>${rich(question.rationales[originalIndex], { inline: true })}</p></li>`;
+        }).join("")}</ul>${citation(question)}</article>`;
       }).join("")}</div></section>`;
   }
 
-  return Object.freeze({ escape, clock, source, chapterId, pdfTitle, excerpts, mindmap, roadmapState, roadmap, phase, form, feedback });
+  return Object.freeze({ escape, clock, source, chapterId, pdfTitle, excerpts, excerptFor, rich, mindmap, roadmapState, roadmap, phase, form, feedback });
 });

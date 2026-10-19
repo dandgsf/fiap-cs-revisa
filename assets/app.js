@@ -65,7 +65,7 @@
     return bank.finals.find(set => set.id === quiz.setId)?.questions || [];
   }
   function quizFor(kind, reference) { return kind === 'mini' ? state.minis[reference] : kind === 'chapter' ? state.practices[reference] : state.attempts[Number(reference)]; }
-  function quizMarkup(quiz, key, kind, reference) { return R.form(quiz, questionsFor(quiz), key, kind, reference) + R.feedback(quiz, questionsFor(quiz), E, key); }
+  function quizMarkup(quiz, key, kind, reference) { return R.form(quiz, questionsFor(quiz), key, kind, reference) + R.feedback(quiz, questionsFor(quiz), E, key, { sources: semester.sources, phases: semester.phases }); }
   function renderMini(phase) {
     const quiz = state.minis[phase];
     get(`mini-quiz-${phase}`).innerHTML = quiz ? quizMarkup(quiz, `mini-${phase}`, 'mini', phase) : '';
@@ -201,11 +201,17 @@
     }
     updateTimes();
   }
-  function openChapter(phase,chapter) {
+  function openChapter(phase,chapter,excerpt) {
     selections.set(Number(phase),{chapter:String(chapter),subject:'all'});
     activateTab(`phase-${phase}`,{scroll:false}); showChapter(Number(phase),String(chapter),'all',true);
     get('study-search').value=''; get('search-results').hidden=true;
     setDrawer(false,{restoreFocus:false});
+    const target=excerpt&&get(excerpt);
+    if(target){
+      const details=target.closest('details');if(details)details.open=true;
+      target.tabIndex=-1;target.focus({preventScroll:true});scrollToStudy(target);
+      globalThis.FIAPMotion?.flash(target);
+    }
   }
   function roadmapStatus() {
     const status = {};
@@ -262,7 +268,7 @@
   document.addEventListener('click',event=>{
     const button=event.target.closest('button,a');if(!button)return;
     if(button.dataset.tab){activateTab(button.dataset.tab,{focus:true});return;}
-    if(button.dataset.openPhase||button.dataset.reviewPhase){event.preventDefault();openChapter(Number(button.dataset.openPhase||button.dataset.reviewPhase),button.dataset.openChapter||button.dataset.reviewChapter);return;}
+    if(button.dataset.openPhase||button.dataset.reviewPhase){event.preventDefault();openChapter(Number(button.dataset.openPhase||button.dataset.reviewPhase),button.dataset.openChapter||button.dataset.reviewChapter,button.dataset.reviewExcerpt);return;}
     if(button.dataset.overviewLink){showChapter(Number(button.dataset.overviewLink),'overview','all');return;}
     if(button.dataset.openMini){showChapter(Number(button.dataset.openMini),'mini','all');return;}
     if(button.dataset.practice){const key=button.dataset.practice;mutate(current=>E.startPractice(current,key,bank));renderPractice(key);get(`form-${key}`).querySelector('input').focus();return;}
