@@ -7,7 +7,7 @@
       ["182 e B6.","128+32+16+4+2=182; grupos 1011 e 0110 correspondem a B e 6."],
       ["182 e 6B.","O decimal está correto, mas os grupos hexadecimais foram invertidos."],
       ["180 e B4.","Esse par ignora o bit de peso 2 presente no número fornecido."],
-      ["86 e 56.","Corresponde a outro byte; perde o peso 128 e altera a representação."],
+      ["86 e 56.","86 = 01010110₂ é outro byte: difere do fornecido nos pesos 128, 64 e 32."],
       ["256 e FF.","FF vale 255, e nenhum byte sem sinal representa 256."]
     ],"Expanda os pesos ou agrupe de quatro em quatro. Use uma conversão para conferir a outra: 11×16+6=182."),
     q("a2",1,L,6,"5–6","Ao montar a linha do tempo da IA para o relatório da Aurora, um estudante precisa associar três anos a marcos diferentes: 1936, 1950 e 1956. Ele sabe que dois desses marcos envolvem Alan Turing e que um deles marca a consolidação do campo como área de pesquisa. Qual sequência associa corretamente os três anos, nessa ordem?",[
@@ -158,7 +158,7 @@
       ["8, um inteiro.","int(a)=12; 12//3=4; 2**2=4; soma=8."],
       ["124, um inteiro.","Não há concatenação: a foi convertido antes do cálculo."],
       ["8, necessariamente texto.","As operações numéricas após int não produzem texto nesse caso."],
-      ["16, um inteiro.","Agrupa a expressão como (4+2)² ou outra ordem indevida; potência precede soma."],
+      ["16, um inteiro.","Sai de (12 // 3) ** 2 = 16 ou de 4 · 4: eleva o quociente ou multiplica em vez de somar; ** vale só para 2 ** 2."],
       ["Erro porque a começou como string.","int(a) converte o texto numérico válido antes da divisão."]
     ],"Rastreie tipo e precedência. Conversão explícita permite cálculo; // e ** têm significados próprios."),
     q("c3",2,L,7,"31","Ao justificar a escolha do processador de bordo, um relatório da Aurora afirma que a Lei de Moore garante que cada nova geração de chips executa qualquer programa duas vezes mais rápido. Considerando a nota de fontes da revisão sobre as datas e o objeto da projeção de Gordon Moore, qual afirmação interpreta corretamente a lei?",[

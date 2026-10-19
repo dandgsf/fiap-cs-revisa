@@ -59,7 +59,7 @@
     "11 :: 17 // 5 é 3, mas o operador pedido é %, que fornece resto 2.",
     "64 :: A soma não entra como base da potência; a precedência mantém 2 ** 3 separado.",
     "13 :: Somar o divisor 5 à potência ignora a operação de resto.",
-    "24 :: O enunciado pede soma do resto com a potência, não multiplicação."
+    "24 :: Sai de (17 // 5) · 2³ = 3 · 8: troca o resto pela divisão inteira e a soma pela multiplicação."
   ]);
   q(1,5,"Para evitar divisão por zero, o script de bordo protege um cálculo de taxa com a expressão `x != 0 and 10 / x > 2`. Numa leitura em que o sensor devolve `x = 0`, o que essa expressão produz em Python?","20–21",[
     "False, sem avaliar a divisão. :: O primeiro operando de and é falso. O curto-circuito evita avaliar 10 / x e, assim, a divisão por zero.",
