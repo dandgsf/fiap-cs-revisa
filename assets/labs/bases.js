@@ -209,7 +209,7 @@
     return `<p class="lab-caption">${caption}</p><div class="table-scroll"><table class="steps lab-groups ${order}" aria-label="${caption}"><tbody><tr data-step>${cells(groups.bits, groups.digits || [])}${fraction}</tr></tbody></table></div>`;
   }
 
-  function render(lab, answer) {
+  function render(lab, answer, { stepwise = true } = {}) {
     const output = lab.querySelector(".lab-output");
     if (!answer.ok) { output.innerHTML = `<p class="lab-error" role="alert">${escapeHtml(answer.error)}</p>`; return; }
     const digits = [...answer.result].map(char => `<span class="lab-digit">${char}</span>`).join("");
@@ -241,7 +241,7 @@
       reveal(steps[shown++], true); update();
     });
     all.addEventListener("click", () => { while (shown < steps.length) reveal(steps[shown++], false); update(); });
-    if (motion().reduced()) { while (shown < steps.length) reveal(steps[shown++], false); }
+    if (!stepwise || motion().reduced()) { while (shown < steps.length) reveal(steps[shown++], false); }
     else reveal(steps[shown++], true);
     update();
   }
@@ -271,7 +271,7 @@
       <div class="lab-actions"><button type="submit" class="button button-primary">Converter</button><button type="button" class="text-button" data-lab-example>Novo exemplo</button></div></form>
       <div class="lab-output" aria-live="polite"></div>`;
     const form = element.querySelector("form");
-    const run = () => render(element, convert(form.elements.value.value, form.elements.from.value, form.elements.to.value));
+    const run = (options = {}) => render(element, convert(form.elements.value.value, form.elements.from.value, form.elements.to.value), options);
     form.addEventListener("submit", event => { event.preventDefault(); run(); });
     element.querySelector(".lab-swap").addEventListener("click", () => {
       const fromValue = form.elements.from.value;
@@ -282,7 +282,7 @@
       const [v, f, t] = pool[Math.floor(Math.random() * pool.length)];
       form.elements.value.value = v; form.elements.from.value = f; form.elements.to.value = t; run();
     });
-    run();
+    run({ stepwise: false });
   }
 
   return Object.freeze({ convert, parse, mount });
