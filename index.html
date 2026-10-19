@@ -18,6 +18,7 @@
   <script defer src="content/semesters/01/questions.js"></script>
   <script defer src="content/semesters/01/final-exams.js"></script>
   <script defer src="content/semesters/01/practice.js"></script>
+  <script defer src="content/semesters/01/roadmap.js"></script>
   <script defer src="content/catalog.js"></script>
   <script defer src="assets/vendor/gsap/gsap.min.js"></script>
   <script defer src="assets/vendor/katex/katex.min.js"></script>
@@ -59,6 +60,7 @@
       <div id="semester-empty" class="empty-state" hidden><h3>O próximo semestre começa aqui.</h3><p>Ainda não há revisões ou questões publicadas para este semestre. Seus estudos do primeiro continuam salvos.</p><button class="button button-secondary" id="back-semester" type="button">Voltar ao 1º semestre</button></div>
       <div id="semester-content">
         <div class="semester-summary"><p id="catalog-summary"></p><p id="reading-summary"></p></div>
+        <details id="semester-map" class="semester-map"><summary><span class="sm-title">Trilha do semestre</span><span class="sm-hint">Veja como os assuntos das quatro fases se conectam e o que você já revisou. Clique em um capítulo para abrir.</span></summary><div id="roadmap"></div></details>
         <div class="study-tabs-wrap"><div id="phase-tabs" class="study-tabs" role="tablist" aria-label="Fases e simulado final"></div></div>
         <div class="library-layout" data-sidebar="expanded">
           <aside class="library-sidebar" id="library-sidebar" aria-labelledby="sidebar-title">

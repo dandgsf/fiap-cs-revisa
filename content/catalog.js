@@ -27,7 +27,7 @@
   globalThis.FIAPCurriculum = {
     name: "FIAP CS Revisa", slug: "fiap-cs-revisa", version: "1.0.0",
     semesters: [{ id: "semestre-1", number: 1, title: "1º semestre", status: "available",
-      phases: globalThis.FIAPCourse.phases, bank: globalThis.FIAPBank, sources: globalThis.FIAPSources,
+      phases: globalThis.FIAPCourse.phases, bank: globalThis.FIAPBank, sources: globalThis.FIAPSources, roadmap: globalThis.FIAPRoadmap,
       reviewPhases: [1, 2] },
     { id: "semestre-2", number: 2, title: "2º semestre", status: "planned", phases: [], sources: [],
       bank: { minis: {}, finals: [], chapters: {} }, reviewPhases: [] }]

@@ -87,6 +87,7 @@
     document.querySelectorAll('[data-read-status]').forEach(node => { node.textContent = state.readChapters[node.dataset.readStatus] ? 'Leitura marcada' : 'Não marcado como lido'; });
     document.querySelectorAll('[data-check]').forEach(input => { input.checked = state.checks[input.dataset.check] === true; });
     document.querySelectorAll('[data-tree-key]').forEach(node => { node.classList.toggle('is-read', state.readChapters[node.dataset.treeKey] === true); });
+    updateRoadmap();
   }
   function isReviewVisible() {
     if (!semester.phases.length || !state.activeTab.startsWith('phase-')) return false;
@@ -206,6 +207,26 @@
     get('study-search').value=''; get('search-results').hidden=true;
     setDrawer(false,{restoreFocus:false});
   }
+  function roadmapStatus() {
+    const status = {};
+    for (const key of bank.chapterIds || []) {
+      const quiz = state.practices[key];
+      status[key] = { read: state.readChapters[key] === true, score: quiz?.submitted ? E.grade(quiz, bank.chapters[key]).score : null };
+    }
+    return status;
+  }
+  function renderRoadmap() {
+    get('roadmap').innerHTML = R.roadmap(semester, roadmapStatus());
+    globalThis.FIAPMaps?.drawRoadmap(get('semester-map'));
+  }
+  function updateRoadmap() {
+    const status = roadmapStatus();
+    document.querySelectorAll('#roadmap [data-node]').forEach(node => {
+      const [phase, chapter] = node.dataset.node.split('-'), entry = status[`p${phase}-c${chapter}`] || {};
+      node.classList.toggle('is-read', entry.read === true);
+      node.querySelector('.rm-state').textContent = R.roadmapState(entry);
+    });
+  }
   function renderTree() {
     get('course-tree').innerHTML=`<p class="tree-semester">${R.escape(semester.title)}</p>`+semester.phases.map(p=>`<details data-tree-phase="${p.id}" ${p.id===Number(state.activeTab.slice(6))?'open':''}><summary>Fase ${p.id} · ${R.escape(p.shortTitle)}</summary>${p.subjects.map(s=>`<details class="tree-subject"><summary>${R.escape(s.title)}</summary>${s.chapters.map(ch=>`<a href="#phase-${p.id}-chapter-${ch.number}" data-open-phase="${p.id}" data-open-chapter="${ch.number}" data-tree-key="p${p.id}-c${ch.number}"><span>${String(ch.number).padStart(2,'0')}</span>${R.escape(ch.title)}</a>`).join('')}</details>`).join('')}</details>`).join('');
   }
@@ -225,7 +246,7 @@
     get('gate-progress').innerHTML=semester.reviewPhases.map(id=>`<div class="gate-phase"><label id="gate-label-${id}" for="gate-${id}"></label><progress id="gate-${id}" value="0" max="${E.REQUIRED_MS}"></progress></div>`).join('');
     const total=Object.values(bank.chapters).reduce((sum,list)=>sum+list.length,0);
     get('catalog-summary').textContent=`${semester.phases.length} fases · ${semester.phases.reduce((n,p)=>n+p.chapters.length,0)} capítulos · ${total} questões autorais`;
-    renderTree();for(const key of bank.chapterIds)renderPractice(key);updateProgress();renderFinal();activateTab(state.activeTab,{scroll:false});
+    renderTree();renderRoadmap();for(const key of bank.chapterIds)renderPractice(key);updateProgress();renderFinal();activateTab(state.activeTab,{scroll:false});
   }
   function search() {
     const query=get('study-search').value.trim(), target=get('search-results');
@@ -275,7 +296,7 @@
     const unanswered=quiz.items.filter(item=>!Object.prototype.hasOwnProperty.call(quiz.answers,item.id));
     if(unanswered.length){get(`status-${key}`).hidden=false;get(`status-${key}`).textContent=`Faltam ${unanswered.length} respostas. Complete todas para consultar a correção.`;unanswered.forEach(item=>get(`${key}-${item.id}`).classList.add('needs-answer'));get(`${key}-${unanswered[0].id}`).querySelector('input').focus();return;}
     mutate(()=>E.submit(quizFor(kind,reference)));
-    if(kind==='mini')renderMini(reference);else if(kind==='chapter')renderPractice(reference);else{selectedAttempt=Number(reference);renderFinal();}
+    if(kind==='mini')renderMini(reference);else if(kind==='chapter'){renderPractice(reference);updateRoadmap();}else{selectedAttempt=Number(reference);renderFinal();}
     get(`result-${key}`).focus();
   });
   get('study-search').addEventListener('input',search);

@@ -39,6 +39,40 @@
     };
     return `<figure class="mindmap wide" id="${id}" data-mindmap><figcaption class="mm-caption"><span class="mm-title">Mapa do capítulo</span><button type="button" class="text-button mm-all" data-mm-all aria-pressed="false">Mostrar os detalhes</button></figcaption><div class="mm-canvas"><div class="mm-root">${escape(map.label)}</div><ul class="mm-branches">${map.children.map((child, index) => node(child, 1, index)).join("")}</ul></div></figure>`;
   }
+  // Trilha do semestre: fases em colunas, faixas de assunto em linhas; as arestas são desenhadas por FIAPMaps.
+  const laneColors = { projeto: 6, logic: 2, code: 3, system: 5, math: 1, energy: 4 };
+  function roadmapState(entry = {}) {
+    const score = Number.isFinite(entry.score) ? Number(entry.score.toFixed(1)).toLocaleString("pt-BR") : null;
+    if (entry.read && score !== null) return `Lido · prática ${score}`;
+    if (entry.read) return "Lido";
+    return score !== null ? `Prática ${score}` : "Não lido";
+  }
+  function roadmap(semester, status = {}) {
+    const data = semester.roadmap;
+    if (!data || !semester.phases.length) return "";
+    const lookup = new Map(semester.phases.flatMap(p => p.chapters.map(ch => [`${p.id}-${ch.number}`, { p, ch }])));
+    const name = key => { const { p, ch } = lookup.get(key); return `F${p.id}·C${ch.number} ${ch.title}`; };
+    const lane = id => `var(--map-${laneColors[id] || 6})`;
+    const describe = key => {
+      const before = data.edges.filter(edge => edge[1] === key).map(([from, , text]) => `${name(from)} (${text})`);
+      const after = data.edges.filter(edge => edge[0] === key).map(([, to, text]) => `${name(to)} (${text})`);
+      return [before.length ? `Retoma: ${before.join("; ")}.` : "", after.length ? `Prepara: ${after.join("; ")}.` : ""].filter(Boolean).join(" ");
+    };
+    const node = (p, ch) => {
+      const key = `${p.id}-${ch.number}`, entry = status[`p${p.id}-c${ch.number}`] || {};
+      const targets = data.edges.filter(edge => edge[0] === key).map(edge => edge[1]).join(" ");
+      const description = describe(key);
+      return `<div class="rm-item"><a class="rm-node${entry.read ? " is-read" : ""}" href="#${chapterId(p.id, ch.number)}" data-open-phase="${p.id}" data-open-chapter="${ch.number}" data-node="${key}" data-to="${targets}" style="--lane:${lane(data.chapterLane[key])}"${description ? ` aria-describedby="rm-desc-${key}"` : ""}><span class="rm-code">F${p.id} · C${ch.number}</span><span class="rm-title">${escape(ch.title)}</span><span class="rm-state">${roadmapState(entry)}</span></a>${description ? `<p class="rm-links" id="rm-desc-${key}">${escape(description)}</p>` : ""}</div>`;
+    };
+    const legend = data.lanes.map(item => `<li style="--lane:${lane(item.id)}">${escape(item.title)}</li>`).join("");
+    const laneTitles = data.lanes.map((item, i) => `<div class="rm-lane-title" style="--row:${i + 2};--lane:${lane(item.id)}">${escape(item.title)}</div>`).join("");
+    const columns = semester.phases.map(p => `<div class="rm-phase" style="--col:${p.id + 1}"><strong>Fase ${p.id}</strong><span>${escape(p.shortTitle)}</span></div>` +
+      data.lanes.map((item, i) => {
+        const chapters = p.chapters.filter(ch => data.chapterLane[`${p.id}-${ch.number}`] === item.id);
+        return `<div class="rm-cell" style="--row:${i + 2};--col:${p.id + 1}">${chapters.length ? `<span class="rm-cell-lane">${escape(item.title)}</span>` + chapters.map(ch => node(p, ch)).join("") : ""}</div>`;
+      }).join("")).join("");
+    return `<div class="roadmap" data-roadmap><ul class="rm-legend">${legend}</ul><div class="rm-scroll"><div class="rm-grid">${laneTitles}${columns}<svg class="rm-edges" aria-hidden="true" focusable="false"></svg></div></div></div>`;
+  }
   function phase(phase, ctx) {
     const context = ctx && typeof ctx === "object" && !Array.isArray(ctx) ? ctx : {};
     const chapters = phase.subjects.flatMap(subject => subject.chapters);
@@ -112,5 +146,5 @@
       }).join("")}</div></section>`;
   }
 
-  return Object.freeze({ escape, clock, source, chapterId, pdfTitle, excerpts, mindmap, phase, form, feedback });
+  return Object.freeze({ escape, clock, source, chapterId, pdfTitle, excerpts, mindmap, roadmapState, roadmap, phase, form, feedback });
 });

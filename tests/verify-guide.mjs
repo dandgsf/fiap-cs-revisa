@@ -512,6 +512,40 @@ check("mapas mentais válidos e acessíveis", () => {
   assert.match(read("assets/motion.js"), /prefers-reduced-motion: reduce/);
 });
 
+check("trilha do semestre consistente", () => {
+  const semester = curriculum.semesters[0];
+  const roadmap = semester.roadmap;
+  assert.ok(roadmap, "semestre sem trilha");
+  const lanes = roadmap.lanes.map(lane => lane.id);
+  assert.deepEqual(lanes, ["projeto", "logic", "code", "system", "math", "energy"]);
+  const keys = course.phases.flatMap(phase => phase.chapters.map(ch => `${phase.id}-${ch.number}`));
+  assert.deepEqual(Object.keys(roadmap.chapterLane).sort(), [...keys].sort());
+  for (const [key, lane] of Object.entries(roadmap.chapterLane)) {
+    assert.ok(lanes.includes(lane), key);
+    if (key.endsWith("-1")) assert.equal(lane, "projeto", key);
+  }
+  assert.ok(roadmap.edges.length >= 18);
+  const seen = new Set(), linked = new Set();
+  for (const [from, to, label] of roadmap.edges) {
+    assert.ok(keys.includes(from) && keys.includes(to), `${from} → ${to}`);
+    assert.ok(Number(from.split("-")[0]) < Number(to.split("-")[0]), `${from} → ${to}: a trilha avança de fase`);
+    assert.ok(label && label.length <= 60, `${from} → ${to}: rótulo`);
+    assert.ok(!seen.has(from + ">" + to), "aresta repetida");
+    seen.add(from + ">" + to); linked.add(from); linked.add(to);
+  }
+  assert.deepEqual(keys.filter(key => !linked.has(key)), [], "capítulos fora da trilha");
+  const markup = R.roadmap(semester, { "p1-c3": { read: true, score: 7.5 }, "p2-c2": { read: false, score: null } });
+  assert.equal((markup.match(/class="rm-node[^"]*"[^>]*data-open-chapter=/g) || []).length, 32);
+  assert.match(markup, /data-node="1-3"[\s\S]*?Lido · prática 7,5/);
+  assert.match(markup, /data-node="2-2"[\s\S]*?Não lido/);
+  const ids = [...markup.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
+  assert.equal(ids.length, new Set(ids).size);
+  for (const [, target] of markup.matchAll(/aria-describedby="([^"]+)"/g)) assert.ok(ids.includes(target), target);
+  assert.match(read("index.html"), /<details id="semester-map" class="semester-map">/);
+  assert.match(read("assets/styles.css"), /@container roadmap \(max-width:\s*56rem\)/);
+  assert.match(read("assets/maps.js"), /drawRoadmap/);
+});
+
 check("menu lateral retrátil, persistente e acessível", () => {
   assert.equal(E.freshState().sidebar, "expanded");
   const collapsed = { ...ready(), sidebar: "collapsed" };
