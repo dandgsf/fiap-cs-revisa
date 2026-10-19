@@ -403,6 +403,37 @@ check("exportação explícita e ausência de formatos comuns de segredos", () =
   assert.match(read("index.html"), /connect-src 'none'/);
 });
 
+check("menu lateral retrátil, persistente e acessível", () => {
+  assert.equal(E.freshState().sidebar, "expanded");
+  const collapsed = { ...ready(), sidebar: "collapsed" };
+  assert.equal(E.restore(JSON.stringify(collapsed), bank).sidebar, "collapsed");
+  assert.equal(E.restore(JSON.stringify({ ...ready(), sidebar: "x" }), bank).sidebar, "expanded");
+  const legacy = ready();
+  delete legacy.sidebar;
+  const quiz = E.startMini(legacy, 1, bank, rng(4));
+  E.answer(quiz, quiz.items[0].id, 2);
+  const restored = E.restore(JSON.stringify(legacy), bank);
+  assert.equal(restored.sidebar, "expanded");
+  assert.equal(restored.minis[1].answers[quiz.items[0].id], 2);
+  const index = read("index.html"), app = read("assets/app.js"), styles = read("assets/styles.css");
+  assert.match(index, /id="library-sidebar"/);
+  assert.match(index, /id="sidebar-toggle"[^>]*aria-controls="library-sidebar"/);
+  assert.match(index, /id="sidebar-toggle"[^>]*aria-expanded="true"/);
+  assert.match(index, /id="sidebar-toggle"[^>]*aria-keyshortcuts="Control\+B Meta\+B"/);
+  assert.match(index, /id="sidebar-close"[^>]*aria-controls="library-sidebar"/);
+  assert.match(index, /id="sidebar-backdrop"/);
+  assert.doesNotMatch(index, /id="library-menu"/);
+  assert.match(app, /event\.ctrlKey\s*\|\|\s*event\.metaKey/);
+  assert.match(app, /toLowerCase\(\)\s*===\s*'b'/);
+  assert.match(app, /closest\('input, select, textarea/);
+  assert.match(app, /\.inert\s*=/);
+  assert.match(app, /'Escape'/);
+  assert.match(styles, /transition:[^;}]*grid-template-columns/);
+  assert.match(styles, /\.library-layout\[data-sidebar="collapsed"\]/);
+  assert.match(styles, /\.drawer-open\s+\.library-sidebar/);
+  assert.match(styles, /container-type:\s*inline-size/);
+});
+
 check("bibliotecas de terceiros fixadas por hash", () => {
   assert.equal(vendor.length, 24, "GSAP, KaTeX (js, css e 20 fontes) e three.js");
   assert.deepEqual([...new Set(vendor.map(item => item.library))].sort(), ["GSAP", "KaTeX", "three.js"]);

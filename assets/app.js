@@ -31,6 +31,34 @@
     get('theme-toggle').setAttribute('aria-pressed', String(state.theme === 'light'));
     document.querySelector('meta[name="theme-color"]').content = state.theme === 'dark' ? '#131516' : '#f5f5f5';
   }
+  const compact = matchMedia('(max-width:760px)');
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  let drawerOpen = false, drawerReturn = null;
+  function applySidebar() {
+    const layout = document.querySelector('.library-layout'), aside = get('library-sidebar'), toggle = get('sidebar-toggle');
+    const collapsed = state.sidebar === 'collapsed';
+    const visible = compact.matches ? drawerOpen : !collapsed;
+    layout.dataset.sidebar = collapsed ? 'collapsed' : 'expanded';
+    document.documentElement.classList.toggle('drawer-open', compact.matches && drawerOpen);
+    aside.inert = !visible;
+    toggle.setAttribute('aria-expanded', String(visible));
+    get('sidebar-close').setAttribute('aria-expanded', String(visible));
+    get('sidebar-toggle-label').textContent = compact.matches ? (drawerOpen ? 'Fechar assuntos' : 'Assuntos') : collapsed ? 'Mostrar menu' : 'Ocultar menu';
+    get('sidebar-shortcut').textContent = isMac ? '⌘ B' : 'Ctrl B';
+  }
+  function setDrawer(open, {restoreFocus=true}={}) {
+    if (open === drawerOpen) return;
+    drawerOpen = open;
+    if (open) drawerReturn = document.activeElement;
+    applySidebar();
+    if (open) (get('course-tree').querySelector('[aria-current="page"]') || get('sidebar-close')).focus({preventScroll:true});
+    else if (restoreFocus) (drawerReturn?.isConnected && drawerReturn !== document.body ? drawerReturn : get('sidebar-toggle')).focus({preventScroll:true});
+  }
+  function toggleSidebar() {
+    if (compact.matches) { setDrawer(!drawerOpen); return; }
+    mutate(current => { current.sidebar = current.sidebar === 'collapsed' ? 'expanded' : 'collapsed'; });
+    applySidebar();
+  }
   function questionsFor(quiz) {
     if (quiz.setId.startsWith('mini-')) return bank.minis[quiz.setId.slice(5)];
     if (quiz.setId.startsWith('chapter-')) return bank.chapters[quiz.setId.slice(8)];
@@ -176,16 +204,16 @@
     selections.set(Number(phase),{chapter:String(chapter),subject:'all'});
     activateTab(`phase-${phase}`,{scroll:false}); showChapter(Number(phase),String(chapter),'all',true);
     get('study-search').value=''; get('search-results').hidden=true;
-    if(innerWidth<760)get('library-menu').open=false;
+    setDrawer(false,{restoreFocus:false});
   }
   function renderTree() {
     get('course-tree').innerHTML=`<p class="tree-semester">${R.escape(semester.title)}</p>`+semester.phases.map(p=>`<details data-tree-phase="${p.id}" ${p.id===Number(state.activeTab.slice(6))?'open':''}><summary>Fase ${p.id} · ${R.escape(p.shortTitle)}</summary>${p.subjects.map(s=>`<details class="tree-subject"><summary>${R.escape(s.title)}</summary>${s.chapters.map(ch=>`<a href="#phase-${p.id}-chapter-${ch.number}" data-open-phase="${p.id}" data-open-chapter="${ch.number}" data-tree-key="p${p.id}-c${ch.number}"><span>${String(ch.number).padStart(2,'0')}</span>${R.escape(ch.title)}</a>`).join('')}</details>`).join('')}</details>`).join('');
   }
-  function selectSemester(id, theme) {
+  function selectSemester(id, prefs={}) {
     semester=curriculum.semesters.find(s=>s.id===id)||curriculum.semesters[0];bank=semester.bank;storageKey=E.storageKey(semester.id);selections.clear();persistent=true;
     let raw=null;
     try { raw=localStorage.getItem(storageKey);if(raw===null&&semester.id==='semestre-1')raw=localStorage.getItem(E.LEGACY_STORAGE_KEY); } catch { persistent=false; }
-    state=E.restore(raw,bank);if(theme)state.theme=theme;
+    state=E.restore(raw,bank);if(prefs.theme)state.theme=prefs.theme;if(prefs.sidebar)state.sidebar=prefs.sidebar;applySidebar();
     selectedAttempt=Math.max(0,state.attempts.length-1);get('semester-select').value=semester.id;
     get('semester-empty').hidden=semester.status==='available';get('semester-content').hidden=semester.status!=='available';
     get('study-search').value='';get('search-results').hidden=true;applyTheme();storageNotice();
@@ -198,7 +226,6 @@
     const total=Object.values(bank.chapters).reduce((sum,list)=>sum+list.length,0);
     get('catalog-summary').textContent=`${semester.phases.length} fases · ${semester.phases.reduce((n,p)=>n+p.chapters.length,0)} capítulos · ${total} questões autorais`;
     renderTree();for(const key of bank.chapterIds)renderPractice(key);updateProgress();renderFinal();activateTab(state.activeTab,{scroll:false});
-    if(innerWidth<760)get('library-menu').open=false;
   }
   function search() {
     const query=get('study-search').value.trim(), target=get('search-results');
@@ -229,7 +256,7 @@
   });
   document.addEventListener('change',event=>{
     const input=event.target;
-    if(input.id==='semester-select'){tick();selectSemester(input.value,state.theme);return;}
+    if(input.id==='semester-select'){tick();selectSemester(input.value,{theme:state.theme,sidebar:state.sidebar});return;}
     if(input.dataset.subjectFilter){showChapter(Number(input.dataset.subjectFilter),'overview',input.value,false);return;}
     if(input.dataset.chapterFilter){showChapter(Number(input.dataset.chapterFilter),input.value,input.closest('.phase-panel').querySelector('[data-subject-filter]').value);return;}
     if(input.dataset.read){mutate(current=>{current.readChapters[input.dataset.read]=input.checked;});updateProgress();return;}
@@ -252,10 +279,10 @@
     get(`result-${key}`).focus();
   });
   get('study-search').addEventListener('input',search);
-  const showFinal=()=>{if(!semester.phases.length)selectSemester(curriculum.semesters[0].id,state.theme);activateTab('final',{focus:true});};
+  const showFinal=()=>{if(!semester.phases.length)selectSemester(curriculum.semesters[0].id,{theme:state.theme,sidebar:state.sidebar});activateTab('final',{focus:true});};
   get('hero-exam').addEventListener('click',showFinal);get('header-exam').addEventListener('click',showFinal);
   get('return-review').addEventListener('click',()=>{const id=semester.reviewPhases.find(id=>state.studyMs[id-1]<E.REQUIRED_MS)||semester.phases[0].id;openChapter(id,semester.phases.find(p=>p.id===id).subjects[0].chapters[0].number);});
-  get('back-semester').addEventListener('click',()=>selectSemester(curriculum.semesters[0].id,state.theme));
+  get('back-semester').addEventListener('click',()=>selectSemester(curriculum.semesters[0].id,{theme:state.theme,sidebar:state.sidebar}));
   get('start-final').addEventListener('click',beginFinal);get('new-attempt').addEventListener('click',beginFinal);
   get('theme-toggle').addEventListener('click',()=>{mutate(current=>{current.theme=current.theme==='dark'?'light':'dark';});applyTheme();});
   get('print-guide').addEventListener('click',()=>window.print());
@@ -271,17 +298,31 @@
     const incoming=E.restore(event.newValue,bank);if(incoming.updatedAt<=state.updatedAt)return;
     const changed=JSON.stringify([state.attempts,state.minis,state.practices])!==JSON.stringify([incoming.attempts,incoming.minis,incoming.practices]);incoming.activeTab=state.activeTab;state=incoming;
     selectedAttempt=Math.min(selectedAttempt,Math.max(0,state.attempts.length-1));
-    if(changed&&semester.phases.length){semester.phases.forEach(p=>renderMini(p.id));bank.chapterIds.forEach(renderPractice);renderFinal();}updateProgress();applyTheme();updateTimes();
+    if(changed&&semester.phases.length){semester.phases.forEach(p=>renderMini(p.id));bank.chapterIds.forEach(renderPractice);renderFinal();}updateProgress();applyTheme();applySidebar();updateTimes();
   });
   get('semester-select').innerHTML=curriculum.semesters.map(s=>`<option value="${s.id}">${R.escape(s.title)}${s.status==='planned'?' · em preparação':''}</option>`).join('');
   const initialRoute=new URLSearchParams(location.hash.slice(1));selectSemester(initialRoute.get('semestre'));
   const initialPhase=initialRoute.get('fase'),initialChapter=initialRoute.get('capitulo');
   if(initialPhase==='final'&&semester.phases.length)activateTab('final',{scroll:false});
   else if(semester.phases.some(p=>String(p.id)===initialPhase)){selections.set(Number(initialPhase),{chapter:initialChapter||'overview',subject:'all'});activateTab(`phase-${initialPhase}`,{scroll:false});}
-  const compactLayout = matchMedia('(max-width:760px)');
-  compactLayout.addEventListener('change', event => { get('library-menu').open = !event.matches; });
-  new ResizeObserver(entries => {
-    document.documentElement.style.setProperty('--header-offset', `${entries[0].target.getBoundingClientRect().height}px`);
-  }).observe(document.querySelector('.site-header'));
+  document.addEventListener('keydown', event => {
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'b') {
+      if (event.target.closest('input, select, textarea, [contenteditable="true"]') || get('semester-content').hidden) return;
+      event.preventDefault(); toggleSidebar(); return;
+    }
+    if (event.key === 'Escape' && drawerOpen) { event.preventDefault(); setDrawer(false); }
+  });
+  get('sidebar-toggle').addEventListener('click', toggleSidebar);
+  get('sidebar-close').addEventListener('click', () => { if (compact.matches) setDrawer(false); else toggleSidebar(); });
+  get('sidebar-backdrop').addEventListener('click', () => setDrawer(false));
+  compact.addEventListener('change', () => { drawerOpen = false; applySidebar(); });
+  requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector('.library-layout').classList.add('is-ready')));
+  const offsets = new ResizeObserver(() => {
+    const root = document.documentElement.style;
+    root.setProperty('--header-offset', `${document.querySelector('.site-header').getBoundingClientRect().height}px`);
+    root.setProperty('--toolbar-offset', `${document.querySelector('.reading-toolbar').getBoundingClientRect().height}px`);
+  });
+  offsets.observe(document.querySelector('.site-header'));
+  offsets.observe(document.querySelector('.reading-toolbar'));
   window.setInterval(tick,1000);
 })();

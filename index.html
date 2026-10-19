@@ -57,10 +57,20 @@
       <div id="semester-content">
         <div class="semester-summary"><p id="catalog-summary"></p><p id="reading-summary"></p></div>
         <div class="study-tabs-wrap"><div id="phase-tabs" class="study-tabs" role="tablist" aria-label="Fases e simulado final"></div></div>
-        <div class="library-layout">
-          <aside class="library-sidebar"><details id="library-menu" open><summary>Navegar pelos assuntos</summary><nav id="course-tree" aria-label="Semestre, fases, assuntos e capítulos"></nav></details><div class="sidebar-note"><strong>Priorize o raciocínio.</strong><p>Essencial destaca conceitos e aplicações. Complementar guarda detalhes de apoio. Nenhum nível prevê a prova.</p><a href="#criterios">Entender os critérios</a></div></aside>
+        <div class="library-layout" data-sidebar="expanded">
+          <aside class="library-sidebar" id="library-sidebar" aria-labelledby="sidebar-title">
+            <div class="sidebar-inner">
+              <div class="sidebar-head"><h3 id="sidebar-title">Navegar pelos assuntos</h3><button class="icon-button" id="sidebar-close" type="button" aria-controls="library-sidebar" aria-expanded="true" aria-label="Fechar o menu de assuntos"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6.5 6.5 11 11m0-11-11 11"/></svg></button></div>
+              <nav id="course-tree" aria-label="Semestre, fases, assuntos e capítulos"></nav>
+              <div class="sidebar-note"><strong>Priorize o raciocínio.</strong><p>Essencial destaca conceitos e aplicações. Complementar guarda detalhes de apoio. Nenhum nível prevê a prova.</p><a href="#criterios">Entender os critérios</a></div>
+            </div>
+          </aside>
+          <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
           <div class="reading-workspace">
-            <nav id="breadcrumbs" class="breadcrumbs" aria-label="Caminho do conteúdo"></nav>
+            <div class="reading-toolbar">
+              <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-controls="library-sidebar" aria-expanded="true" aria-keyshortcuts="Control+B Meta+B"><svg class="ui-icon panel-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.75" y="4.75" width="16.5" height="14.5"/><path d="M9.25 4.75v14.5"/><path class="panel-chevron" d="m16 9.5-2.5 2.5 2.5 2.5"/></svg><span id="sidebar-toggle-label">Ocultar menu</span><kbd class="shortcut" id="sidebar-shortcut" aria-hidden="true">Ctrl B</kbd></button>
+              <nav id="breadcrumbs" class="breadcrumbs" aria-label="Caminho do conteúdo"></nav>
+            </div>
             <div id="study-notice" class="study-notice" role="alert" hidden></div>
             <div id="phase-panels"></div>
             <section id="panel-final" class="tabpanel final-panel" role="tabpanel" aria-labelledby="tab-final" tabindex="0" hidden>
