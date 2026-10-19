@@ -64,6 +64,9 @@
   const fmt = (value, digits = 3) => { const number = Number(value); return (Math.abs(number) < 0.5 * 10 ** -digits ? 0 : number).toLocaleString("pt-BR", { maximumFractionDigits: digits }); };
   const signed = value => (value < 0 ? "− " : "+ ") + fmt(Math.abs(value));
   const pair = (a, b, digits = 3) => `(${fmt(a, digits)}; ${fmt(b, digits)})`;
+  // η com até 2 algarismos significativos: o valor exibido é exatamente o usado na conta.
+  function etaAt(name, position) { const [a, b] = functions[name].etaRange; return Number((a * (b / a) ** (position / 1000)).toPrecision(2)); }
+  const formatEta = eta => Number(eta).toLocaleString("pt-BR", { maximumSignificantDigits: 2 });
 
   function readout(state) {
     const fn = functions[state.fn], [x0, y0] = [state.x0, state.y0];
@@ -71,7 +74,7 @@
     const run = state.run, end = run.path.at(-1);
     const x1 = x0 - state.eta * plane.gx, y1 = y0 - state.eta * plane.gy;
     const near = fn.minima.find(([mx, my]) => Math.hypot(end[0] - mx, end[1] - my) < 0.05);
-    const summary = run.diverged ? `A descida <strong>divergiu</strong> em ${run.path.length - 1} passos: com η = ${fmt(state.eta, 4)}, cada passo salta para longe e f cresce. Diminua η.`
+    const summary = run.diverged ? `A descida <strong>divergiu</strong> em ${run.path.length - 1} passos: com η = ${formatEta(state.eta)}, cada passo salta para longe e f cresce. Diminua η.`
       : near ? `Depois de ${run.path.length - 1} passos, o ponto chegou a ${pair(end[0], end[1])}, com f = ${fmt(end[2], 6)}: o mínimo ${pair(near[0], near[1])}.`
       : `Depois de ${run.path.length - 1} passos, o ponto está em ${pair(end[0], end[1])}, com f = ${fmt(end[2], 4)}. Aumente os passos ou ajuste η.`;
     const last = run.path.slice(-6).map((point, i, list) => {
@@ -84,7 +87,7 @@
         <div><dt>Valor</dt><dd>f(x₀, y₀) = ${fmt(plane.f0)}</dd></div>
         <div><dt>Gradiente</dt><dd>∇f(x₀, y₀) = ${pair(plane.gx, plane.gy)}; |∇f| = ${fmt(norm, 2)}</dd></div>
         <div><dt>Plano tangente</dt><dd>z ≈ ${fmt(plane.f0)} ${signed(plane.gx)}·(x ${signed(-x0)}) ${signed(plane.gy)}·(y ${signed(-y0)})</dd></div>
-        <div><dt>1º passo</dt><dd>(x₁, y₁) = (x₀, y₀) − ${fmt(state.eta, 4)}·∇f = ${pair(x1, y1)}</dd></div>
+        <div><dt>1º passo</dt><dd>(x₁, y₁) = (x₀, y₀) − ${formatEta(state.eta)}·∇f = ${pair(x1, y1)}</dd></div>
       </dl>
       <p class="surface-summary">${summary}</p>
       <div class="table-scroll"><table class="steps"><caption>Últimos passos da descida</caption><thead><tr><th>t</th><th>x</th><th>y</th><th>f(x, y)</th><th>|∇f|</th></tr></thead><tbody>${last}</tbody></table></div>`;
@@ -289,18 +292,16 @@
     const form = element.querySelector("form"), readoutBox = element.querySelector(".surface-readout");
     const state = { fn: "himmelblau", x0: -10, y0: 10, eta: 0.002, steps: 150, plane: true, run: null };
     let scene = null;
-    const etaFromSlider = () => { const [a, b] = functions[state.fn].etaRange; return a * (b / a) ** (form.elements.eta.value / 1000); };
     const sliderFromEta = eta => { const [a, b] = functions[state.fn].etaRange; return Math.round(1000 * Math.log(eta / a) / Math.log(b / a)); };
     const sync = () => {
       form.elements.fn.value = state.fn; form.elements.x0.value = state.x0; form.elements.y0.value = state.y0;
-      form.elements.eta.value = sliderFromEta(state.eta); form.elements.etaOut.value = fmt(state.eta, 4);
+      form.elements.eta.value = sliderFromEta(state.eta); form.elements.etaOut.value = formatEta(state.eta);
       form.elements.steps.value = state.steps; form.elements.plane.checked = state.plane;
     };
     const run = () => {
       const fn = functions[state.fn], [lo, hi] = fn.domain;
       state.x0 = Math.min(hi, Math.max(lo, Number(form.elements.x0.value) || 0));
       state.y0 = Math.min(hi, Math.max(lo, Number(form.elements.y0.value) || 0));
-      state.eta = etaFromSlider();
       state.steps = Math.min(400, Math.max(1, Math.round(Number(form.elements.steps.value) || fn.steps)));
       state.plane = form.elements.plane.checked;
       state.run = descent(state.fn, state.x0, state.y0, state.eta, state.steps);
@@ -316,7 +317,7 @@
       run();
     };
     form.addEventListener("submit", event => { event.preventDefault(); run(); });
-    form.elements.eta.addEventListener("input", () => { form.elements.etaOut.value = fmt(etaFromSlider(), 4); });
+    form.elements.eta.addEventListener("input", () => { state.eta = etaAt(state.fn, Number(form.elements.eta.value)); form.elements.etaOut.value = formatEta(state.eta); });
     form.elements.fn.addEventListener("change", () => reset(form.elements.fn.value));
     element.querySelector("[data-surface-reset]").addEventListener("click", () => reset(state.fn));
     element.addEventListener("surface:pick", event => { form.elements.x0.value = Number(event.detail.x.toFixed(2)); form.elements.y0.value = Number(event.detail.y.toFixed(2)); run(); });
@@ -339,5 +340,5 @@
     reset("himmelblau");
   }
 
-  return Object.freeze({ functions, descent, tangentPlane, loadThree, mount });
+  return Object.freeze({ functions, descent, tangentPlane, etaAt, formatEta, loadThree, mount });
 });

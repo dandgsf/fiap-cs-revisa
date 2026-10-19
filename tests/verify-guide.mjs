@@ -634,6 +634,14 @@ check("gradiente: núcleo numérico do laboratório 3D", () => {
   assert.ok(Math.hypot(other[0] - 3.5844, other[1] + 1.8481) < 0.05, "η maior leva a outro mínimo");
   assert.equal(S.descent("himmelblau", -10, 10, 0.05, 400).diverged, true);
   assert.equal(S.descent("bowl", 3, -2, 0.1, 200).diverged, false);
+  // O aluno refaz o 1º passo à mão com o η da tela: o valor exibido tem de ser exatamente o usado.
+  for (const [name, fn] of Object.entries(S.functions)) for (let position = 0; position <= 1000; position++) {
+    const eta = S.etaAt(name, position);
+    assert.ok(eta >= fn.etaRange[0] && eta <= fn.etaRange[1], `${name} ${position}: η = ${eta}`);
+    assert.equal(Number(S.formatEta(eta).replace(",", ".")), eta, `${name} ${position}: η exibido difere do usado`);
+  }
+  assert.equal(S.formatEta(S.functions.himmelblau.eta), "0,002");
+  assert.equal((read("assets/labs/surface.js").match(/etaAt\(/g) || []).length, 2, "η só muda quando o controle se move");
   assert.match(read("assets/labs/surface.js"), /assets\/vendor\/three\/three\.min\.js/);
   assert.doesNotMatch(read("index.html"), /three\.min\.js/, "three.js carrega só ao abrir o laboratório");
   assert.match(read("index.html"), /assets\/labs\/surface\.js/);
