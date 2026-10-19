@@ -1,0 +1,2 @@
+# Arquivos de terceiros são distribuídos byte a byte; o hash em scripts/vendor-manifest.mjs depende disso.
+assets/vendor/** -text

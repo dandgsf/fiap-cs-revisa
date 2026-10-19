@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -8,6 +9,8 @@ import { runtime as runtimeFiles, files as projectFiles } from "../scripts/proje
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = file => readFileSync(join(root, file), "utf8");
+const { vendor } = existsSync(join(root, "scripts/vendor-manifest.mjs")) ? await import("../scripts/vendor-manifest.mjs") : { vendor: [] };
+const hashed = new Set(vendor.map(item => item.path));
 const require = createRequire(import.meta.url);
 const E = require(join(root, "assets/engine.js"));
 const R = require(join(root, "assets/render.js"));
@@ -279,7 +282,8 @@ check("pacote autocontido, privacidade e identificação autorizada do autor", (
     assert.ok(existsSync(join(root, asset)), asset);
   }
   for (const file of dataFiles) assert.ok(assets.includes(file), file);
-  const runtime = runtimeFiles.map(read).join("\n");
+  // Arquivos de terceiros ficam cobertos pelo hash do manifesto; a varredura vale para o código próprio.
+  const runtime = runtimeFiles.filter(file => !hashed.has(file)).map(read).join("\n");
   const footer = index.match(/<footer\b[^>]*>[\s\S]*?<\/footer>/)[0];
   assert.doesNotMatch(runtime, /\b(?:fetch|XMLHttpRequest|WebSocket|sendBeacon)\s*\(/);
   assert.doesNotMatch(runtime, /@import\b|url\(\s*["']?(?:https?:|\/\/)/i);
@@ -390,12 +394,31 @@ check("exportação explícita e ausência de formatos comuns de segredos", () =
     assert.ok(existsSync(join(root, file)), file);
     assert.ok(!file.split("/").includes(".git"));
     assert.doesNotMatch(file, /\.(?:pdf|pem|pub|key|pfx|p12)$/i);
+    if (hashed.has(file)) continue;
     const text = read(file);
     for (const [category, pattern] of detectors) assert.ok(!pattern.test(text), `${file}: detector ${category}`);
   }
   assert.match(read("scripts/serve.mjs"), /server\.listen\(port, "127\.0\.0\.1"/);
   assert.match(read("scripts/serve.mjs"), /runtime\.includes\(file\)/);
   assert.match(read("index.html"), /connect-src 'none'/);
+});
+
+check("bibliotecas de terceiros fixadas por hash", () => {
+  assert.equal(vendor.length, 24, "GSAP, KaTeX (js, css e 20 fontes) e three.js");
+  assert.deepEqual([...new Set(vendor.map(item => item.library))].sort(), ["GSAP", "KaTeX", "three.js"]);
+  const licenses = existsSync(join(root, "assets/vendor/LICENSES.md")) ? read("assets/vendor/LICENSES.md") : "";
+  for (const item of vendor) {
+    assert.match(item.path, /^assets\/vendor\/[\w.\/-]+$/, item.path);
+    assert.ok(runtimeFiles.includes(item.path), item.path + ": fora da lista de runtime");
+    assert.ok(existsSync(join(root, item.path)), item.path);
+    const hash = createHash("sha256").update(readFileSync(join(root, item.path))).digest("hex");
+    assert.equal(hash, item.sha256, item.path + ": hash divergente do manifesto");
+    assert.ok(licenses.includes(item.library) && licenses.includes(item.version), item.library + " sem licença registrada");
+  }
+  for (const file of runtimeFiles.filter(file => file.startsWith("assets/vendor/"))) {
+    assert.ok(vendor.some(item => item.path === file), file + ": arquivo de terceiros sem hash");
+  }
+  assert.ok(projectFiles.includes("assets/vendor/LICENSES.md"));
 });
 
 console.log("\n" + groups.length + " grupos aprovados. Validação lógica/estrutural; não substitui inspeção visual e interação em navegador.");
