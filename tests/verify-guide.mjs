@@ -14,6 +14,7 @@ const hashed = new Set(vendor.map(item => item.path));
 const require = createRequire(import.meta.url);
 const E = require(join(root, "assets/engine.js"));
 const R = require(join(root, "assets/render.js"));
+const katex = require(join(root, "assets/vendor/katex/katex.min.js"));
 const sandbox = vm.createContext({});
 const dataFiles = [...read("index.html").matchAll(/<script defer src="([^"]+)"/g)].map(m => m[1]).filter(file => file.startsWith("content/"));
 for (const file of dataFiles) vm.runInContext(read(file), sandbox, { filename: file });
@@ -168,6 +169,7 @@ check("envio completo, nota, erros, revisão e alternativas embaralhadas", () =>
   assert.equal((initial.match(/<fieldset/g) || []).length, 10);
   assert.equal((initial.match(/type="radio"/g) || []).length, 50);
   assert.doesNotMatch(initial, /correct-option|chosen-wrong|Alternativa correta|review-verdict/);
+  assert.doesNotMatch(initial, /page-ref|source-reference|PDF/, "páginas e fonte só aparecem depois da correção");
   assert.equal(R.feedback(quiz, questions, E, "test"), "");
   for (const item of quiz.items) assert.deepEqual([...item.optionOrder].sort(), [0, 1, 2, 3, 4]);
   assert.ok(quiz.items.some(item => item.optionOrder.join() !== "0,1,2,3,4"));
@@ -401,6 +403,61 @@ check("exportação explícita e ausência de formatos comuns de segredos", () =
   assert.match(read("scripts/serve.mjs"), /server\.listen\(port, "127\.0\.0\.1"/);
   assert.match(read("scripts/serve.mjs"), /runtime\.includes\(file\)/);
   assert.match(read("index.html"), /connect-src 'none'/);
+});
+
+const htmlFields = chapter => ["body", "worked", "extension"].map(field => chapter[field] || "").join("\n");
+const decode = text => text.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+const texSources = html => [...html.matchAll(/<(span|div) class="(tex|tex-block)">([\s\S]*?)<\/\1>/g)].map(match => decode(match[3]));
+// Em template literal, "\t", "\f", "\n", "\r", "\v" e "\b" viram caracteres de controle e "\c", "\s", "\a"… perdem a barra.
+const bareCommand = /(?<![\\A-Za-z])(frac|dfrac|tfrac|sqrt|cdot|cdots|ldots|times|div|pm|sum|prod|int|lim|log|ln|exp|sin|cos|tan|in|le|leq|ge|geq|neq|approx|equiv|alpha|beta|gamma|delta|Delta|epsilon|varepsilon|eta|theta|lambda|mu|sigma|Sigma|pi|omega|phi|varphi|partial|nabla|infty|quad|qquad|left|right|text|mathrm|mathbf|mathbb|operatorname|hat|bar|overline|underbrace|overbrace|binom|begin|end|land|lor|lnot|oplus|implies|iff|forall|exists|subset|cup|cap|Rightarrow|Leftrightarrow)\b/;
+function texProblems(tex) {
+  const problems = [];
+  if (/[\u0000-\u001F]/.test(tex)) problems.push("caractere de controle (barra invertida perdida ou quebra de linha no TeX)");
+  if (bareCommand.test(tex)) problems.push("comando sem barra: " + tex.match(bareCommand)[0]);
+  try { katex.renderToString(tex, { throwOnError: true, strict: "ignore" }); } catch (error) { problems.push("KaTeX: " + error.message); }
+  return problems;
+}
+
+check("trechos citados por página", () => {
+  const sample = R.excerpts('<section class="excerpt" data-pages="33–36"><h4>Divisões</h4><p>x</p></section><section class="excerpt" data-pages="39"><p>y</p></section>', "ex-1-3", "Cap. 3 — Exemplo");
+  assert.match(sample, /<section class="excerpt" id="ex-1-3-1" data-pages="33–36"><p class="page-ref"[^>]*><span>PDF<\/span> p\. 33–36<\/p><h4>/);
+  assert.match(sample, /id="ex-1-3-2" data-pages="39"><p class="page-ref"[^>]*><span>PDF<\/span> p\. 39<\/p>/);
+  assert.equal(R.pdfTitle(sources, 1, 3), "A Lógica que Define Cada Decisão no Cérebro Digital da Nave");
+  assert.equal(R.pdfTitle(sources, 4, 4), "O Cálculo Diferencial que Modela as Variações do Sistema Energético");
+  for (const phase of course.phases) {
+    const markup = R.phase(phase, { sources });
+    let excerpts = 0;
+    for (const chapter of phase.chapters) {
+      const html = htmlFields(chapter);
+      assert.doesNotMatch(html, /<section class="excerpt"(?! data-pages="[^"]+">)/, chapter.title + ": trecho sem data-pages");
+      for (const [, pages] of html.matchAll(/<section class="excerpt" data-pages="([^"]+)">/g)) {
+        reference({ phase: phase.id, chapter: chapter.number, pages }, chapter.title + " (trecho)");
+        excerpts++;
+      }
+      assert.ok(markup.includes(`Cap. ${chapter.number} — ${R.pdfTitle(sources, phase.id, chapter.number)} · PDF p. ${chapter.pages}`), chapter.title + ": fonte do capítulo");
+    }
+    assert.equal((markup.match(/class="page-ref"/g) || []).length, excerpts, `fase ${phase.id}: um marcador de página por trecho`);
+  }
+  assert.equal(course.phases.map(R.phase).join("").includes("undefined"), false, "map(R.phase) passa índice como contexto");
+});
+
+check("fórmulas renderizáveis e sem barra perdida", () => {
+  assert.ok(texProblems("\f" + "rac{1}{2}").length > 0, "detecta \\f perdido");
+  assert.ok(texProblems("a " + "\t" + "imes b").length > 0, "detecta \\t perdido");
+  assert.ok(texProblems("cdot x").length > 0, "detecta comando sem barra");
+  assert.deepEqual(texProblems("\\dfrac{1}{1-R_j^{2}}"), []);
+  let total = 0;
+  for (const phase of course.phases) for (const chapter of phase.chapters) {
+    for (const tex of texSources(htmlFields(chapter))) {
+      assert.deepEqual(texProblems(tex), [], `${phase.id}-${chapter.number}: ${tex}`);
+      total++;
+    }
+    assert.doesNotMatch(htmlFields(chapter), /<p class="formula">/, `${phase.id}-${chapter.number}: fórmula antiga sem KaTeX`);
+  }
+  assert.ok(total >= 6, "fórmulas convertidas para KaTeX");
+  const index = read("index.html");
+  assert.ok(index.indexOf("assets/math.js") > index.indexOf("assets/vendor/katex/katex.min.js"));
+  assert.match(read("assets/app.js"), /FIAPMath\?\.renderIn\(/, "sem KaTeX o guia continua funcionando");
 });
 
 check("menu lateral retrátil, persistente e acessível", () => {

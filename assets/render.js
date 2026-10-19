@@ -14,7 +14,18 @@
   const arrow = '<svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>';
 
   const priorityLabels = { core: "Essencial", support: "Complementar", context: "Contexto do projeto" };
-  function phase(phase) {
+  function pdfTitle(sources, phaseId, chapterNumber) {
+    const item = (sources || []).find(source => source.phase === phaseId && source.chapter === chapterNumber);
+    return item ? item.file.replace(/^Cap\s*\d+\s*-\s*/, "").replace(/_RevFinal/i, "").replace(/\.pdf$/i, "").trim() : "";
+  }
+  // Cada trecho citado ganha id estável (prefixo-n) e o marcador das páginas do PDF como primeiro filho.
+  function excerpts(html, prefix, label = "") {
+    let count = 0;
+    return String(html || "").replace(/<section class="excerpt" data-pages="([^"]+)">/g, (_, pages) =>
+      `<section class="excerpt" id="${prefix}-${++count}" data-pages="${pages}"><p class="page-ref"${label ? ` title="${escape(label)}"` : ""}><span>PDF</span> p. ${pages}</p>`);
+  }
+  function phase(phase, ctx) {
+    const context = ctx && typeof ctx === "object" && !Array.isArray(ctx) ? ctx : {};
     const chapters = phase.subjects.flatMap(subject => subject.chapters);
     return `<section id="panel-phase-${phase.id}" class="tabpanel phase-panel" role="tabpanel" aria-labelledby="tab-phase-${phase.id}" tabindex="0" hidden>
       <header class="phase-heading"><h2>${escape(phase.shortTitle)}</h2><p>${escape(phase.summary)}</p></header>
@@ -28,15 +39,18 @@
       <div class="chapter-body">${chapters.map((ch, index) => {
         const key = `p${phase.id}-c${ch.number}`;
         const next = chapters[index+1];
+        const title = context.sources ? pdfTitle(context.sources, phase.id, ch.number) : "";
+        const label = title ? `Fase ${phase.id} · Cap. ${ch.number} — ${title}` : "";
+        const [body, worked, extension] = ["ex", "wk", "xt"].map((prefix, i) => excerpts([ch.body, ch.worked, ch.extension][i], `${prefix}-${phase.id}-${ch.number}`, label));
         return `<article class="lesson" id="${chapterId(phase.id,ch.number)}" aria-labelledby="heading-${phase.id}-${ch.number}" data-chapter="${ch.number}" hidden>
           <div class="lesson-meta"><span class="priority-label">${priorityLabels[ch.priority]}</span><span>${ch.minutes} min de leitura estimada</span><span data-read-status="${key}">Não marcado como lido</span></div>
           <h3 id="heading-${phase.id}-${ch.number}" tabindex="-1">${escape(ch.title)}</h3>
-          <p class="lesson-source">Fase ${phase.id} · Capítulo ${ch.number} · PDF, p. ${escape(ch.pages)}</p>
+          <p class="lesson-source">${title ? `Fase ${phase.id} · Cap. ${ch.number} — ${escape(title)} · PDF p. ${escape(ch.pages)}` : `Fase ${phase.id} · Capítulo ${ch.number} · PDF, p. ${escape(ch.pages)}`}</p>
           <div class="learning-focus"><strong>Ao revisar, concentre-se em:</strong><p>${escape(ch.focus)}</p></div>
-          ${ch.priority === 'context' ? `<p>${escape(ch.priorityReason)}</p><details class="extension"><summary>Ler o contexto completo do projeto</summary>${ch.body}</details>` : ch.body}
-          <section class="worked-example"><h4>Reconstrua o raciocínio</h4>${ch.worked}</section>
+          ${ch.priority === 'context' ? `<p>${escape(ch.priorityReason)}</p><details class="extension"><summary>Ler o contexto completo do projeto</summary>${body}</details>` : body}
+          <section class="worked-example"><h4>Reconstrua o raciocínio</h4>${worked}</section>
           <p class="pitfall"><strong>Cuidado com esta confusão.</strong> ${escape(ch.pitfall)}</p>
-          ${ch.extension ? `<details class="extension"><summary>${escape(ch.extensionTitle || 'Aprofundar e consultar ferramentas')}</summary>${ch.extension}</details>` : ""}
+          ${ch.extension ? `<details class="extension"><summary>${escape(ch.extensionTitle || 'Aprofundar e consultar ferramentas')}</summary>${extension}</details>` : ""}
           <div class="retrieval"><h4>Explique antes de abrir</h4>${ch.recall.map(item=>`<details><summary>${escape(item.question)}</summary><p>${escape(item.answer)}</p></details>`).join("")}</div>
           <div class="lesson-completion"><label><input type="checkbox" data-read="${key}"><span>Revisei e consigo explicar o raciocínio</span></label><p>Uma marcação de leitura, não uma comprovação de domínio.</p></div>
           <section class="chapter-practice" aria-labelledby="practice-title-${key}"><h4 id="practice-title-${key}">Agora, teste sua compreensão.</h4><p data-practice-description="${key}"></p><button type="button" class="button button-primary" data-practice="${key}">Praticar este capítulo</button><div id="practice-${key}"></div></section>
@@ -82,5 +96,5 @@
       }).join("")}</div></section>`;
   }
 
-  return Object.freeze({ escape, clock, source, chapterId, phase, form, feedback });
+  return Object.freeze({ escape, clock, source, chapterId, pdfTitle, excerpts, phase, form, feedback });
 });

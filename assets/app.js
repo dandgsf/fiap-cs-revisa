@@ -179,7 +179,7 @@
     chapterSelect.value=selected;
     panel.querySelector('[data-overview]').hidden=selected!=='overview';
     panel.querySelectorAll('.chapter-row').forEach(row=>{row.hidden=actualSubject!=='all'&&row.dataset.subject!==actualSubject;});
-    panel.querySelectorAll('.lesson').forEach(lesson=>{lesson.hidden=lesson.dataset.chapter!==selected;});
+    panel.querySelectorAll('.lesson').forEach(lesson=>{lesson.hidden=lesson.dataset.chapter!==selected;if(!lesson.hidden)globalThis.FIAPMath?.renderIn(lesson);});
     get(`mini-${phase.id}`).hidden=selected!=='mini';
     if(selected==='mini') { if(!state.minis[phase.id])mutate(current=>E.startMini(current,phase.id,bank)); renderMini(phase.id); }
     document.querySelectorAll('[data-open-chapter]').forEach(link=>{
@@ -219,7 +219,7 @@
     get('study-search').value='';get('search-results').hidden=true;applyTheme();storageNotice();
     get('source-catalog').innerHTML=semester.sources.length?semester.phases.map(p=>`<h3>Fase ${p.id}</h3><ol>${semester.sources.filter(s=>s.phase===p.id).map(s=>`<li>${R.escape(s.file)} <small>(${s.pages} páginas)</small></li>`).join('')}</ol>`).join(''):'Nenhum PDF catalogado neste semestre.';
     if(!semester.phases.length){route('','');return;}
-    get('phase-panels').innerHTML=semester.phases.map(R.phase).join('');
+    get('phase-panels').innerHTML=semester.phases.map(p=>R.phase(p,{sources:semester.sources})).join('');
     get('phase-tabs').innerHTML=semester.phases.map(p=>`<button id="tab-phase-${p.id}" role="tab" aria-controls="panel-phase-${p.id}" aria-selected="false" tabindex="-1" data-tab="phase-${p.id}" type="button">Fase ${p.id}<span>${R.escape(p.shortTitle)}</span></button>`).join('')+'<button id="tab-final" class="final-tab" role="tab" aria-controls="panel-final" aria-selected="false" tabindex="-1" data-tab="final" type="button">Simulado final<span id="final-tab-state">Após a revisão</span></button>';
     tabs=[...document.querySelectorAll('[data-tab]')];
     get('gate-progress').innerHTML=semester.reviewPhases.map(id=>`<div class="gate-phase"><label id="gate-label-${id}" for="gate-${id}"></label><progress id="gate-${id}" value="0" max="${E.REQUIRED_MS}"></progress></div>`).join('');
@@ -286,7 +286,7 @@
   get('start-final').addEventListener('click',beginFinal);get('new-attempt').addEventListener('click',beginFinal);
   get('theme-toggle').addEventListener('click',()=>{mutate(current=>{current.theme=current.theme==='dark'?'light':'dark';});applyTheme();});
   get('print-guide').addEventListener('click',()=>window.print());
-  window.addEventListener('beforeprint',()=>{tick();printing=true;printedDetails=[...document.querySelectorAll('.phase-panel details,.source-notes')].map(d=>[d,d.open]);printedDetails.forEach(([d])=>{d.open=true;});});
+  window.addEventListener('beforeprint',()=>{tick();printing=true;globalThis.FIAPMath?.renderIn(get('phase-panels'));printedDetails=[...document.querySelectorAll('.phase-panel details,.source-notes')].map(d=>[d,d.open]);printedDetails.forEach(([d])=>{d.open=true;});});
   window.addEventListener('afterprint',()=>{printedDetails.forEach(([d,open])=>{d.open=open;});printing=false;lastTick=performance.now();});
   ['pointerdown','keydown','wheel','touchstart'].forEach(type=>document.addEventListener(type,event=>{if(event.isTrusted)lastActivity=performance.now();},{passive:true}));
   document.addEventListener('visibilitychange',()=>{lastTick=performance.now();updateTimes();});
