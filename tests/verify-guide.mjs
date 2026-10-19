@@ -511,6 +511,8 @@ check("mapas mentais válidos e acessíveis", () => {
   assert.match(styles, /@container mindmap \(max-width:\s*40rem\)/);
   assert.match(styles.slice(styles.lastIndexOf("@media print")), /\.mindmap \[hidden\]/);
   assert.match(styles.slice(styles.lastIndexOf("@media print")), /\.mm-node:not\(\.mm-leaf\)\[aria-expanded="false"\]::after\{display:none\}/, "impressão expande e esconde o selo +N");
+  // A revelação oculta os nós com estilo inline até entrarem na tela; a impressão precisa vencê-lo.
+  assert.match(styles.slice(styles.lastIndexOf("@media print")), /\.mm-root,\.mm-node\{opacity:1!important;visibility:visible!important\}/);
   // Alvos de toque de 44px (restrição do projeto), inclusive no menu do topo no celular.
   for (const rule of [/\.mm-node\{[^}]*min-height:44px/, /\.mm-all\{[^}]*min-height:44px/]) assert.match(styles, rule);
   assert.doesNotMatch(styles, /\.site-header nav a,\.nav-button\{[^}]*min-height:(?:[0-3]\d|4[0-3])px/);
