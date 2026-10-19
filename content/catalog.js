@@ -7,7 +7,18 @@
     4: [["programacao", "Dados e estruturas", [2, 3]], ["matematica", "Cálculo e modelos", [4, 5, 6]], ["energia", "Energia e sustentabilidade", [7, 8]], ["projeto", "Contexto do projeto", [1]]]
   };
   const labels = ["Fundamentos da computação", "Lógica e estruturas", "Dados e sistemas", "Modelos e energia"];
+  const supporting = ["1-2", "2-8"];
+  const reasons = {
+    context: "Enunciado integrador: entenda o cenário e volte a ele quando precisar aplicar os conceitos.",
+    support: "Consolide conceitos e relações. Nomes, datas e detalhes ficam disponíveis para consulta.",
+    core: "Conceitos transferíveis e operações que permitem resolver situações novas. Prioridade pedagógica, sem estimativa de incidência na prova."
+  };
   for (const phase of globalThis.FIAPCourse.phases) {
+    for (const ch of phase.chapters) {
+      ch.priority = ch.number === 1 ? "context" : supporting.includes(`${phase.id}-${ch.number}`) ? "support" : "core";
+      ch.priorityReason = reasons[ch.priority];
+      ch.minutes = Math.max(4, Math.ceil((ch.body + ch.worked).replace(/<[^>]+>/g, " ").split(/\s+/).length / 170));
+    }
     phase.shortTitle = labels[phase.id - 1];
     phase.subjects = definitions[phase.id].map(([id, title, numbers]) => ({ id, title,
       chapters: numbers.map(number => phase.chapters.find(ch => ch.number === number)) }));

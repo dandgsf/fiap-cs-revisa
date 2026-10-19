@@ -71,7 +71,6 @@ content/
   semesters/
     01/
       phases/01.js ...     Revisões do primeiro semestre
-      enrichment.js       Ampliação dos tópicos e prioridades editoriais
       questions.js        Mini simulados preservados
       final-exams.js       Três conjuntos finais preservados
       practice.js         Questões adicionais e índice por capítulo
