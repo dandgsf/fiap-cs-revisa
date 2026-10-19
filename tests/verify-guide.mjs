@@ -545,6 +545,12 @@ check("enunciados ricos e fonte detalhada só no resultado", () => {
   assert.equal((plain.match(/class="source-reference"/g) || []).length, 10, "sem contexto continua mostrando a fonte");
 });
 
+check("alternativas e gabaritos estáveis para o progresso salvo", () => {
+  // Respostas salvas guardam o índice original da alternativa: IDs, alternativas e gabarito não podem mudar sem migração.
+  const stable = all.map(q => [q.id, q.options, q.correctIndex]).sort((a, b) => a[0] < b[0] ? -1 : 1);
+  assert.equal(createHash("sha256").update(JSON.stringify(stable)).digest("hex"), "41e9c21c4cbb48c158ae48b13b1c52cd919334f364224862306340732553e0b5");
+});
+
 check("conversor de bases: passos e resultados", () => {
   const B = require(join(root, "assets/labs/bases.js"));
   const binary = B.convert("45", 10, 2);
