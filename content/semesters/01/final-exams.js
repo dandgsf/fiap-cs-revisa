@@ -38,21 +38,21 @@
       ["1992 Agenda 2030, com 169 ODS e 17 metas.","A agenda é de 2015 e os números de objetivos e metas estão invertidos."],
       ["2015 criação da Pascalina e lançamento da Agenda 21.","Mistura um artefato computacional do século XVII com uma agenda de 1992."]
     ],"Memorize o par data–significado. Agenda 21 e Agenda 2030 são marcos diferentes; a última reúne 17 ODS e 169 metas.","Recordar"),
-    q("a6",3,L,2,"18–40","Uma saída foi escrita como F=A·B+A·B'. Qual simplificação preserva todas as linhas da tabela-verdade?",[
+    q("a6",3,L,2,"49–53","O alarme de pressão do módulo foi escrito como F = A·B + A·B', em que A indica pressão abaixo do limite e B indica eclusa aberta. Antes de montar o circuito, você quer a expressão mais simples que preserve todas as linhas da tabela-verdade. Qual é ela?",[
       ["F=A.","F=A(B+B')=A·1=A, pela distributiva e complemento."],
       ["F=B.","Com A=0 e B=1, a original vale 0, mas B vale 1."],
       ["F=A+B.","Com A=0 e B=1, essa expressão vale 1 e a original vale 0."],
       ["F=0.","Quando A=1, um dos dois termos será 1."],
       ["F=A'.", "A função não inverte A; ela o reproduz."]
     ],"Fatore o termo comum. O complemento de B cobre as duas possibilidades de B, tornando a saída independente dessa variável."),
-    q("a7",3,M,5,"12–17","A=[[2,1],[0,3]] e x=[[4],[2]]. Qual é o produto matricial Ax e sua dimensão?",[
+    q("a7",3,M,5,"12–14","Um controlador combina duas leituras de sensor aplicando a matriz de ganhos A = [[2, 1], [0, 3]] ao vetor coluna x = [[4], [2]]. Calcule o produto matricial Ax, multiplicando cada linha de A pela coluna x, e indique a dimensão do resultado.",[
       ["[[10],[6]], dimensão 2×1.","Linha 1: 2×4+1×2=10; linha 2: 0×4+3×2=6."],
       ["[[8,2],[0,6]], dimensão 2×2.","Esse resultado tenta multiplicar elementos isolados, não linhas por colunas."],
       ["[[6],[5]], dimensão 2×1.","Soma valores sem efetuar os produtos escalares exigidos."],
       ["[[10,6]], dimensão 1×2.","Os valores estão corretos, mas o resultado do produto é vetor coluna."],
       ["O produto é impossível porque as matrizes têm formatos diferentes.","Os formatos podem diferir; as dimensões internas 2 coincidem."]
     ],"Primeiro confira (2×2)(2×1)=(2×1); depois multiplique cada linha da matriz pela coluna do vetor."),
-    q("a8",3,M,7,"17–22","O modelo prevê ŷ=12+3x. Para x=4, o observado é y=27. Qual interpretação está correta?",[
+    q("a8",3,M,7,"7–8; 11","O modelo ajustado para a demanda de água é ŷ = 12 + 3x, com x em módulos ocupados e ŷ em litros por hora. Em uma hora com x = 4, o consumo observado foi y = 27. Usando resíduo = y − ŷ, qual leitura da previsão, do resíduo e do coeficiente está correta?",[
       ["Previsão 24, resíduo 3; cada unidade de x associa-se a +3 em ŷ.","12+3×4=24; y−ŷ=27−24=3; a inclinação é 3."],
       ["Previsão 27, resíduo 0; o modelo sempre acerta a observação.","Confunde o valor observado com a previsão calculada."],
       ["Previsão 24, resíduo −3; o modelo superestimou.","O modelo subestimou, pois o observado é maior; o resíduo y−ŷ é positivo."],
@@ -110,21 +110,21 @@
       ["t=8, com h=3.","O ponto está fora do intervalo e não maximiza a parábola."],
       ["Não existe máximo porque a função é quadrática.","Uma função contínua nesse intervalo fechado possui máximo."]
     ],"A solução precisa respeitar o domínio. Não basta calcular o vértice e ignorar as restrições do cenário."),
-    q("b6",3,S,4,"8–29","São necessárias consultas por intervalos de chaves e tempo de busca O(log n) no pior caso, sob implementação correta. Qual estrutura atende melhor?",[
+    q("b6",3,S,4,"10–12; 24–25","O registro de telemetria precisa responder a consultas como 'todas as leituras com carimbo de tempo entre 1000 e 1500' e garantir busca O(log n) no pior caso, mesmo quando as chaves chegam em ordem crescente. Supondo implementação correta, qual estrutura atende melhor às duas exigências?",[
       ["Uma árvore de busca balanceada, como AVL.","Mantém ordem e altura logarítmica, apoiando busca e intervalos."],
       ["BST comum, pois toda árvore binária já é balanceada.","Uma BST comum pode degenerar em cadeia."],
       ["Tabela hash, pois sempre mantém chaves em ordem crescente.","Hash não oferece essa ordenação nem garantia universal de pior caso constante."],
       ["Pilha, pois LIFO organiza intervalos numéricos.","LIFO define ordem de remoção, não ordenação por chave."],
       ["Fila, pois FIFO elimina a necessidade de busca.","Ordem de chegada não resolve consultas por intervalo de chaves."]
     ],"A estrutura deve satisfazer duas condições: ordem de chaves e altura controlada. Balanceamento evita o pior caso linear da BST comum.","Analisar"),
-    q("b7",3,S,6,"18–30","Um processador com um núcleo alterna tarefas enquanto algumas aguardam entrada/saída. Qual descrição é correta?",[
+    q("b7",3,S,6,"18–19; 31","O computador de bordo tem um único núcleo e atende três tarefas: leitura de sensores, compressão de imagens e envio de telemetria. Enquanto uma delas espera a resposta de um dispositivo de entrada/saída, o sistema operacional entrega a CPU a outra. Qual descrição dessa execução é correta?",[
       ["Há concorrência por intercalação, sem exigir execução simultânea das instruções das tarefas.","O sistema organiza progresso de várias tarefas ao longo do tempo."],
       ["Há necessariamente paralelismo entre todas as tarefas.","Intercalação não significa simultaneidade."],
       ["Não pode existir concorrência com um núcleo.","Concorrência não exige múltiplos núcleos."],
       ["Cada processo é apenas um arquivo sem estado de execução.","Processo é uma instância em execução, com estado e recursos."],
       ["O kernel é somente a janela gráfica que o usuário vê.","O kernel gerencia recursos e serviços fundamentais; não é só interface."]
     ],"Separe o modo de organização das tarefas da simultaneidade física. Essa distinção evita confundir concorrência e paralelismo."),
-    q("b8",3,M,5,"24–28","Um array NumPy tem shape (4,3). Deseja-se subtrair uma média por coluna, armazenada em shape (3,). Qual afirmação é correta?",[
+    q("b8",3,M,5,"17–18; 26–27","Um array NumPy `leituras` tem shape (4, 3): quatro instantes nas linhas e três sensores nas colunas. A equipe calcula `media = leituras.mean(axis=0)`, de shape (3,), e executa `leituras - media` para centralizar cada coluna. O que acontece nessa subtração?",[
       ["O broadcasting é compatível e o resultado mantém shape (4,3).", "O último eixo tem tamanho 3 nos dois; o vetor é aplicado às quatro linhas."],
       ["O resultado tem shape (3,4) por transposição automática.","Broadcasting não transpõe os eixos."],
       ["É impossível porque os arrays precisam ter ndim idêntico.","Broadcasting permite dimensões diferentes quando seus eixos são compatíveis."],
@@ -175,14 +175,14 @@
       ["A busca linear se torna O(1) porque o array está ordenado.","Ordem não muda o percurso linear escolhido."],
       ["A busca binária dispensa ordenação quando n é potência de dois.","Potência de dois não elimina a pré-condição de ordem."]
     ],"Compare crescimento, não tempo de relógio. Os valores logarítmicos explicam a escala, sem fixar contagem exata para toda implementação."),
-    q("c5",3,P,3,"53–56","Uma função soma(n) retorna 0 se n==0; caso contrário retorna n+soma(n−1), com contrato n inteiro não negativo. Quanto retorna soma(4) e por que termina?",[
+    q("c5",3,P,3,"53–57","A função `soma(n)` devolve 0 quando `n == 0` e, nos demais casos, `n + soma(n - 1)`; o contrato aceita apenas inteiros não negativos. Rastreie a pilha de chamadas de `soma(4)` até o caso-base e de volta. Qual valor é devolvido e por que a recursão termina?",[
       ["10; o argumento diminui até o caso base 0.","4+3+2+1+0=10; a redução respeita o contrato."],
       ["24; toda recursão calcula fatorial.","Aqui a operação é soma, não multiplicação."],
       ["4; return impede qualquer chamada recursiva.","A expressão do retorno avalia a chamada antes de concluir."],
       ["10; termina mesmo se o argumento for negativo sem validação.","Com n negativo e decremento, a função se afasta de zero."],
       ["Não termina porque funções não podem chamar a si mesmas.","Recursão é válida quando existe progresso para um caso base."]
     ],"Identifique operação, caso base e redução. O contrato de domínio faz parte da justificativa de término."),
-    q("c6",3,E,8,"21–23","Num modelo idealizado de vento, a potência disponível é proporcional a v³. Mantendo as outras variáveis, dobrar v produz qual efeito e qual limite de interpretação?",[
+    q("c6",3,E,8,"21–22","No modelo idealizado P = ½·ρ·A·v³·Cp, o vento em uma turbina da colônia passa de 5 m/s para 10 m/s, com densidade do ar, área varrida e Cp constantes. Qual é o efeito sobre a potência disponível no vento e qual limite de interpretação vale para a máquina real?",[
       ["Oito vezes a potência disponível; não garante oito vezes a saída de uma turbina real.","2³=8, mas potência nominal, controle e regimes de operação limitam a extração."],
       ["Duas vezes, sem limites de operação.","Ignora o expoente cúbico e as restrições reais."],
       ["Seis vezes, pois 2×3=6.","Potência cúbica exige elevar 2 ao cubo, não multiplicar por 3."],

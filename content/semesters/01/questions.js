@@ -87,35 +87,35 @@ globalThis.FIAPBank = { finals: [], minis: {} };
     ],"Associe 2015, Agenda 2030, 17 objetivos e 169 metas. Qualidade do relato depende de governança.","Recordar")
   ];
   bank.minis[3] = [
-    q("m3-1",3,L,2,"24–35","Na linha A=0, B=1 e saída=0, qual maxtermo vale zero exatamente nessa combinação?",[
+    q("m3-1",3,L,2,"31–33","No painel de alarmes da eclusa, a tabela-verdade de F(A, B) tem saída 0 exatamente na linha A = 0, B = 1. Para montar a forma produto de somas, você precisa do termo OR com as duas variáveis que vale 0 somente nessa combinação. Qual maxtermo corresponde a essa linha?",[
       ["A + B'.", "A=0 e B'=0; o OR vale zero quando ambos os literais são zero."],
       ["A'·B.","É o mintermo que vale 1 nessa linha."],
       ["A' + B.","Os dois literais valem 1 na combinação dada."],
       ["A·B.","É produto e vale zero em três combinações, não apenas nesta."],
       ["A + B.","Com B=1, essa soma vale 1."]
     ],"Maxtermos são somas para as saídas zero. Negue a variável cujo valor de entrada é 1."),
-    q("m3-2",3,P,3,"25–31","Uma função Python executa print(2 + 3) e termina sem return. O que ocorre em resultado = funcao()?",[
+    q("m3-2",3,P,3,"25–28","O módulo de relatórios define `def funcao():` com uma única linha no corpo, `print(2 + 3)`, e nenhum `return`. Em seguida, o programa principal executa `resultado = funcao()`. O que aparece na tela e qual valor fica associado a `resultado`?",[
       ["Exibe 5 e associa None a resultado.","print apresenta a saída; sem retorno explícito, a função devolve None."],
       ["Associa 5 sem exibir nada.","Isso descreve return 5, não print(5)."],
       ["Associa o texto '5'.", "A apresentação na tela não vira retorno textual automaticamente."],
       ["Sempre gera erro por faltar return.","Python permite funções sem retorno explícito."],
       ["Associa True porque a operação teve sucesso.","Sucesso de execução não gera um retorno booleano implícito."]
     ],"Diferencie saída na tela e valor devolvido ao chamador. A distinção importa ao encadear cálculos."),
-    q("m3-3",3,S,4,"25–29","Duas chaves diferentes produzem o mesmo índice numa tabela hash. Qual interpretação é correta?",[
+    q("m3-3",3,S,4,"26–29","O inventário da colônia usa uma tabela hash de 10 posições com h(k) = k mod 10. Ao inserir os códigos 15 e 25, as duas chaves, diferentes entre si, produzem o mesmo índice 5. Qual interpretação desse resultado é correta?",[
       ["Houve colisão; uma política de resolução pode manter ambos os registros.","Encadeamento e sondagem são exemplos de tratamento sem perda automática."],
       ["As chaves são necessariamente iguais.","Entradas distintas podem produzir o mesmo índice."],
       ["Toda consulta terá O(1) garantido no pior caso.","O pior caso pode ser linear; não confunda com custo esperado."],
       ["O registro mais antigo deve ser descartado.","Perda de dados não é solução universal correta para colisões."],
       ["A tabela se torna automaticamente uma AVL.","Colisão não implica transformação automática da estrutura."]
     ],"Hash exige função de dispersão, capacidade e política de colisão. Custo esperado e pior caso são diferentes."),
-    q("m3-4",3,M,5,"35–37","Uma equipe aplica PCA aos sensores sem rótulos de falha. Qual conclusão é correta?",[
+    q("m3-4",3,M,5,"35–38","A equipe de manutenção reúne 13 medições químicas por amostra do fluido de arrefecimento, sem nenhum rótulo de falha, e aplica PCA mantendo apenas as duas primeiras componentes, como no exemplo do conjunto de vinhos do capítulo. Qual conclusão sobre esse procedimento é correta?",[
       ["Pode reduzir dimensões por variância, sem garantir a melhor classificação.","PCA é não supervisionado e variância não equivale automaticamente a poder discriminativo."],
       ["Aprende diretamente a falha por supervisão.","Os rótulos não participam do ajuste descrito."],
       ["Mantém obrigatoriamente a dimensão original.","A seleção de componentes pode reduzir dimensão e perder informação."],
       ["A escala das variáveis nunca influencia o resultado.","Escalas diferentes podem dominar a variância; pré-processamento importa."],
       ["Elimina a necessidade de avaliar o classificador posterior.","Transformar dados não valida o modelo que usará os componentes."]
     ],"Distinguir o objetivo da transformação do objetivo da previsão evita atribuir ao PCA uma garantia inexistente.","Analisar"),
-    q("m3-5",3,M,7,"20–22","Observados: [4, 7]. Previsões: [5, 5]. Com resíduo=y−ŷ e MSE=Σresíduo²/n, qual resultado é correto?",[
+    q("m3-5",3,M,7,"11–12","Um modelo de consumo previu 5 kWh para cada um de dois dias seguidos, e o medidor registrou 4 kWh no primeiro dia e 7 kWh no segundo. Adote resíduo = observado − previsto e MSE = Σ(resíduo²)/n. Quais são os resíduos, na ordem dos dias, e o MSE?",[
       ["Resíduos [−1, 2]; MSE=2,5.","(1+4)/2=2,5, usando observado menos previsto."],
       ["Resíduos [1, −2]; MSE=2,5.","O MSE coincide pelo quadrado, mas os sinais dos resíduos estão invertidos."],
       ["Resíduos [−1, 2]; MSE=0,5.","0,5 é média dos resíduos, não média dos seus quadrados."],

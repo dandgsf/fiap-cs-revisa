@@ -299,105 +299,105 @@
     "Cai para 0,625 por peça. :: 50/80 inverte a razão; isso mede peças por energia.",
     "Não é possível calcular nenhuma razão. :: O enunciado fornece energia e produção de ambos os períodos."
   ]);
-  q(3,2,"Pela lei de De Morgan, qual expressão equivale a NOT (A AND B)?","5–56",[
+  q(3,2,"Uma regra de segurança libera a eclusa quando `pressao_ok and porta_fechada` é verdadeira, e o alarme deve disparar exatamente quando essa condição falha. O firmware só aceita negações aplicadas a variáveis isoladas, nunca a uma expressão inteira. Com A = pressao_ok e B = porta_fechada, qual expressão equivale a NOT (A AND B) pela lei de De Morgan?","18–21",[
     "(NOT A) OR (NOT B). :: Negar uma conjunção equivale à disjunção das negações: basta que pelo menos uma condição original falhe.",
     "(NOT A) AND (NOT B). :: Essa expressão exige que ambas sejam falsas, uma condição mais restrita.",
     "A OR B. :: A negação dos operandos não pode ser eliminada na transformação.",
     "A AND (NOT B). :: Essa expressão nega apenas um operando e mantém A obrigatoriamente verdadeiro.",
     "NOT (A OR B). :: Essa expressão equivale a (NOT A) AND (NOT B), não ao enunciado."
   ]);
-  q(3,2,"Pela lei de absorção, a expressão booleana A OR (A AND B) simplifica para quê?","5–56",[
+  q(3,2,"O ventilador do módulo liga quando `A or (A and B)` é verdadeira, em que A significa CO₂ acima do limite e B significa módulo ocupado. Um revisor suspeita que a variável B é redundante nessa condição. Pela lei de absorção, a expressão booleana simplifica para quê?","40–41; 49",[
     "A. :: Se A é verdadeiro, toda a expressão é verdadeira; se A é falso, os dois termos são falsos. B não altera a saída.",
     "B. :: Com A verdadeiro e B falso, a expressão vale verdadeiro; portanto não equivale a B.",
     "A AND B. :: Com A verdadeiro e B falso, esse termo é falso enquanto a expressão original é verdadeira.",
     "NOT A. :: Essa resposta inverte os resultados da expressão absorvida.",
     "A XOR B. :: XOR mudaria a saída quando A e B fossem ambos verdadeiros."
   ]);
-  q(3,3,"Uma função f(n) retorna 1 para n = 0 e n × f(n − 1) para n > 0. Qual é f(4)?","8–60",[
+  q(3,3,"Uma rotina do planejador de rotas define f(n) = 1 para n = 0 e f(n) = n × f(n − 1) para n > 0. Rastreie as chamadas empilhadas a partir de f(4) até o caso-base e multiplique os valores na volta da pilha. Qual é o valor de f(4)?","53–57",[
     "24. :: As chamadas multiplicam 4 × 3 × 2 × 1 e chegam ao caso-base f(0) = 1; o resultado é 24.",
     "10. :: Dez seria a soma de 1 a 4, mas a função multiplica.",
     "16. :: A recorrência calcula fatorial, não n ao quadrado.",
     "0. :: O caso-base retorna 1, preservando o produto; ele não multiplica por zero.",
     "Recursão infinita para n = 4. :: O argumento diminui e alcança zero, onde existe retorno sem nova chamada."
   ]);
-  q(3,3,"Uma função Python recebe uma lista e executa lista.append(5), sem reatribuir o parâmetro. O chamador observa o quê?","8–60",[
+  q(3,3,"A função `registrar(leituras)` recebe a lista do chamador e executa apenas `leituras.append(5)`, sem atribuir outro valor ao parâmetro e sem `return`. O programa principal faz `dados = [3, 4]` e chama `registrar(dados)`. O que o chamador observa em `dados` depois da chamada?","22–23; 36–37",[
     "A lista original passa a conter o novo elemento. :: O parâmetro referencia o mesmo objeto mutável; append modifica esse objeto, e o chamador observa a alteração.",
     "Nenhuma mudança, porque toda função copia os argumentos. :: Python não faz uma cópia automática de todo objeto passado a uma função.",
     "A variável original passa a ser None. :: append retorna None, mas o trecho não atribui esse retorno à variável do chamador.",
     "A lista vira tupla. :: append altera o conteúdo da lista, não seu tipo.",
     "O parâmetro se torna uma variável global. :: Compartilhar referência não altera o escopo do nome do parâmetro."
   ],"Analisar");
-  q(3,4,"Uma árvore binária de busca insere 5, 2, 8, 1 e 3, sem duplicatas. Qual é o percurso em ordem?","6–30",[
+  q(3,4,"Os identificadores 5, 2, 8, 1 e 3 são inseridos, nessa ordem, em uma árvore binária de busca sem duplicatas, com chaves menores à esquerda e maiores à direita. Em seguida, a árvore é percorrida em ordem: subárvore esquerda, raiz, subárvore direita. Qual sequência é impressa?","8–10; 22",[
     "1, 2, 3, 5, 8. :: O percurso esquerda, raiz, direita de uma BST visita as chaves em ordem crescente quando a propriedade de busca é respeitada.",
     "5, 2, 1, 3, 8. :: Essa é a ordem de um percurso pré-ordem nesta árvore, não em ordem.",
     "1, 3, 2, 8, 5. :: Essa sequência corresponde ao percurso pós-ordem.",
     "5, 2, 8, 1, 3. :: Essa é uma sequência por níveis para a árvore, não o percurso pedido.",
     "8, 5, 3, 2, 1. :: Essa ordem decrescente exigiria visitar direita antes de esquerda."
   ]);
-  q(3,4,"Duas chaves distintas produzem o mesmo índice em uma tabela hash. O que isso caracteriza?","6–30",[
+  q(3,4,"Um cache de leituras usa uma tabela hash de 7 posições, indexada pelo identificador do sensor com h(k) = k mod 7. Os sensores 10 e 31 vão parar na mesma posição, a 3, embora sejam chaves distintas. Como se chama essa situação e como ela costuma ser tratada?","27–28",[
     "Colisão, que pode ser tratada por encadeamento ou endereçamento aberto. :: O espaço de índices é limitado e pode receber chaves diferentes; a implementação precisa de uma política para localizá-las corretamente.",
     "Prova de que as chaves são iguais. :: Igualdade de hash não implica igualdade das chaves.",
     "Obrigação de perder um dos registros. :: Políticas de colisão preservam registros com índices coincidentes.",
     "Balanceamento de uma árvore AVL. :: Colisão é uma questão de tabelas hash, não rotação de AVL.",
     "Garantia de busca O(1) no pior caso. :: Muitas colisões podem degradar o custo; o caso esperado não é uma garantia universal."
   ],"Compreender");
-  q(3,5,"Se A tem dimensão 2×3 e B tem dimensão 3×4, qual é a dimensão do produto matricial AB?","7–37",[
+  q(3,5,"Na simulação de carga, A (2×3) guarda as horas de uso de três equipamentos em dois turnos, e B (3×4) guarda o consumo por hora de cada equipamento em quatro recursos. Antes de calcular `A @ B`, você confere a compatibilidade das dimensões. Qual é a dimensão do produto matricial AB?","12–14",[
     "2×4. :: As dimensões internas 3 coincidem, permitindo o produto. As dimensões externas 2 e 4 determinam a matriz resultante.",
     "3×3. :: As dimensões internas validam a operação, mas não são as dimensões do resultado.",
     "2×3. :: O número de colunas do resultado vem de B, que possui quatro.",
     "3×4. :: O número de linhas do resultado vem de A, que possui duas.",
     "O produto é indefinido. :: O número de colunas de A coincide com o número de linhas de B."
   ]);
-  q(3,6,"Qual é uma responsabilidade típica do sistema operacional?","5–35",[
+  q(3,6,"Ao especificar o computador de controle da estufa, a equipe precisa separar o que cabe ao sistema operacional do que cabe aos aplicativos e ao hardware. O capítulo descreve o SO como o programa que gerencia os recursos da máquina e serve de interface para os demais programas. Qual é uma responsabilidade típica do sistema operacional?","18–19",[
     "Gerenciar processos, memória e acesso a dispositivos. :: O sistema operacional coordena recursos e fornece abstrações para que programas usem a máquina com controle e compartilhamento.",
     "Substituir fisicamente a unidade lógica e aritmética. :: A ULA é hardware; o sistema operacional não a substitui fisicamente.",
     "Garantir que todo programa esteja correto. :: O sistema pode isolar e gerenciar execução, mas não garante correção de toda aplicação.",
     "Eliminar a necessidade de memória. :: Programas e o próprio sistema operacional precisam de memória.",
     "Transformar qualquer algoritmo em tempo constante. :: A complexidade depende do algoritmo e do problema, não é eliminada pelo sistema."
   ],"Compreender");
-  q(3,6,"Um programa está armazenado no disco, enquanto uma instância dele executa com estado e recursos. Como chamamos essa instância?","5–35",[
+  q(3,6,"O arquivo `telemetria.py` está gravado no SSD do módulo. Quando o operador o executa, o sistema operacional carrega o código na RAM e cria uma instância com contador de programa, registradores, memória e arquivos abertos próprios. Como se chama essa instância em execução?","18; 26",[
     "Processo. :: Processo é uma instância de programa em execução, com estado e recursos associados; o arquivo do programa é uma descrição passiva.",
     "Compilador. :: Compilador transforma programas; não nomeia qualquer instância em execução.",
     "Registrador. :: Registrador é um componente de armazenamento da CPU, não a instância inteira.",
     "Periférico. :: Periférico é um dispositivo, não o estado de execução de um programa.",
     "Sistema de numeração. :: Sistemas de numeração representam valores, não processos."
   ],"Compreender");
-  q(3,6,"Durante a execução de programas concorrentes, por que o escalonamento da CPU é necessário?","5–35",[
+  q(3,6,"No computador de bordo, quatro processos estão prontos para executar, mas há um único núcleo, e o processo que lê o sensor de radiação exige resposta rápida. O sistema operacional precisa alternar a CPU entre eles ao longo do tempo. Por que o escalonamento da CPU é necessário nesse cenário?","18–19; 31",[
     "Para decidir quais processos prontos recebem tempo de CPU. :: O escalonador organiza o uso de um recurso compartilhado de acordo com uma política, conciliando diferentes necessidades de execução.",
     "Para dar uma CPU física exclusiva a cada arquivo. :: Concorrência pode compartilhar a mesma CPU; arquivos não recebem necessariamente CPUs próprias.",
     "Para impedir qualquer interrupção. :: Interrupções podem ser essenciais para recuperar o controle e alternar execuções.",
     "Para substituir todos os processos por dados estáticos. :: O objetivo é coordenar a execução, não eliminá-la.",
     "Para garantir que todos terminem no mesmo instante. :: Políticas de escalonamento não garantem durações iguais para trabalhos diferentes."
   ],"Compreender");
-  q(3,7,"Um modelo prevê 12 kWh e a observação real é 15 kWh. Usando resíduo = observado − previsto, qual é o resíduo?","6–24",[
+  q(3,7,"O modelo de regressão previu 12 kWh de consumo para a estufa no turno da noite, e o medidor registrou 15 kWh. Adote a convenção resíduo = observado − previsto, a mesma do capítulo. Qual é o resíduo dessa observação, com sinal e unidade?","11; 21",[
     "+3 kWh. :: Pela convenção informada, 15 − 12 = 3. O sinal positivo indica que o modelo subestimou a observação.",
     "−3 kWh. :: Esse resultado usa a convenção inversa, previsto menos observado.",
     "27 kWh. :: Somar observado e previsto não mede o desvio entre eles.",
     "3 kW. :: A unidade continua sendo energia, kWh, e não potência.",
     "0 kWh. :: As duas quantidades são diferentes e o resíduo não é zero."
   ]);
-  q(3,7,"Uma regressão foi ajustada com temperaturas de 15 a 30 °C e usada para prever em 60 °C. Qual cuidado é central?","6–24",[
+  q(3,7,"Uma regressão do consumo de refrigeração foi ajustada com temperaturas externas entre 15 e 30 °C e teve R² alto nesses dados. O operador quer usá-la para prever o consumo de um dia com 60 °C. Qual cuidado é central antes de confiar nessa previsão?","14; 22–23",[
     "É extrapolação; a relação ajustada pode não valer nessa faixa. :: O novo valor está fora do intervalo observado. Bom ajuste dentro da amostra não garante comportamento adequado em um regime distante.",
     "É interpolação segura por definição. :: Interpolação ocorre dentro da faixa observada, não além dela.",
     "Basta obter R² alto no treino para garantir a previsão. :: R² de treino não garante validade da extrapolação.",
     "O coeficiente vira automaticamente zero. :: O modelo ainda pode calcular uma saída; o problema é sua validade.",
     "A unidade da temperatura deixa de importar. :: Unidades e transformações continuam essenciais na interpretação."
   ],"Analisar");
-  q(3,8,"No modelo ideal que mantém área e densidade do ar constantes, a potência eólica disponível é proporcional a v³. Se v triplica, qual é o fator?","7–30",[
+  q(3,8,"No modelo ideal P = ½·ρ·A·v³, com área varrida e densidade do ar constantes, o anemômetro de um mastro de medição registra o vento passando de 4 m/s para 12 m/s. Por qual fator fica multiplicada a potência eólica disponível no vento?","21–22",[
     "27. :: Como a dependência é cúbica, (3v)³/v³ = 3³ = 27, sob as condições declaradas.",
     "3. :: Esse fator corresponderia a dependência linear, não cúbica.",
     "6. :: Somar expoente e multiplicador não calcula a variação da potência.",
     "9. :: Nove seria o fator de uma dependência quadrática.",
     "81. :: O expoente fornecido é três, não quatro."
   ]);
-  q(3,8,"Um painel fotovoltaico converte diretamente qual forma de energia em eletricidade?","7–30",[
+  q(3,8,"A colônia instala células de silício monocristalino na cobertura do módulo de pesquisa, ligadas a um inversor. Ao contrário de um coletor solar térmico, essas células não aquecem fluido nem acionam turbina alguma. Um painel fotovoltaico converte diretamente qual forma de energia em eletricidade?","9–11",[
     "Energia da radiação luminosa. :: No efeito fotovoltaico, a radiação permite gerar eletricidade em materiais adequados; não se exige uma turbina térmica.",
     "Somente calor transportado por vapor. :: Essa descrição se aproxima de conversão termelétrica, não do efeito fotovoltaico direto.",
     "Energia cinética do vento. :: Esse é o recurso explorado por turbinas eólicas.",
     "Energia química de combustíveis. :: Um painel fotovoltaico não exige combustão para converter a radiação.",
     "Energia gravitacional de água represada. :: Essa é a fonte primária de uma instalação hidrelétrica."
   ],"Compreender");
-  q(3,8,"Uma fonte solar produz energia variável ao longo do dia. Qual decisão melhora a análise de atendimento de uma carga contínua?","7–30",[
+  q(3,8,"O arranjo fotovoltaico da base produz 24 kWh por dia, e a carga de suporte à vida consome 1 kW de forma contínua, ou 24 kWh por dia. A geração se concentra entre 8 h e 16 h, e a carga não pode ser interrompida à noite. Qual decisão melhora a análise de atendimento dessa carga contínua?","14; 24; 26",[
     "Comparar perfis de geração e demanda e avaliar armazenamento ou complementaridade. :: Energia total diária não informa se a potência estará disponível no instante necessário; os perfis temporais precisam ser compatibilizados.",
     "Comparar apenas a potência nominal do painel com a energia diária. :: Potência e energia são grandezas diferentes; essa comparação omite o tempo.",
     "Supor potência nominal constante durante toda a noite. :: A geração fotovoltaica depende de radiação disponível.",
