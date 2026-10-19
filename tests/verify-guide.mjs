@@ -545,6 +545,28 @@ check("enunciados ricos e fonte detalhada só no resultado", () => {
   assert.equal((plain.match(/class="source-reference"/g) || []).length, 10, "sem contexto continua mostrando a fonte");
 });
 
+check("conteúdo completo: trechos, mapas, passo a passo, laboratórios e enunciados", () => {
+  const calculation = { 1: [3, 4, 6, 7], 2: [2, 5, 6, 7], 3: [2, 5, 7, 8], 4: [3, 4, 5, 6, 7] };
+  for (const phase of course.phases) for (const chapter of phase.chapters) {
+    const label = `${phase.id}-${chapter.number}`;
+    const excerpts = [...chapter.body.matchAll(/<section class="excerpt" data-pages="/g)].length;
+    assert.ok(excerpts >= (chapter.number === 1 ? 2 : 3), `${label}: ${excerpts} trechos citados`);
+    const loose = chapter.body.replace(/<section class="excerpt" data-pages="[^"]+">[\s\S]*?<\/section>/g, "").replace(/<div class="lab"[^>]*><\/div>/g, "").trim();
+    assert.equal(loose, "", `${label}: conteúdo fora de trecho citado`);
+    if (chapter.number >= 2) assert.ok(chapter.map, `${label}: mapa mental`);
+    if (calculation[phase.id].includes(chapter.number)) {
+      assert.match(htmlFields(chapter), /class="formula"/, `${label}: fórmula destacada`);
+      assert.match(htmlFields(chapter), /class="(steps|calc)"/, `${label}: passo a passo`);
+    }
+  }
+  assert.match(course.phases[0].chapters[2].body, /data-lab="bases"/);
+  assert.match(course.phases[3].chapters[3].body, /data-lab="surface"/);
+  for (const q of all) {
+    assert.ok(q.prompt.length >= 120 && q.prompt.length <= 650, `${q.id}: enunciado com ${q.prompt.length} caracteres`);
+    assert.ok(R.excerptFor(course.phases, q.source), `${q.id}: páginas ${q.source.pages} fora dos trechos citados`);
+  }
+});
+
 check("alternativas e gabaritos estáveis para o progresso salvo", () => {
   // Respostas salvas guardam o índice original da alternativa: IDs, alternativas e gabarito não podem mudar sem migração.
   const stable = all.map(q => [q.id, q.options, q.correctIndex]).sort((a, b) => a[0] < b[0] ? -1 : 1);
