@@ -8,7 +8,7 @@ Antes de alterar um tema, confira o PDF individual e identifique fase, capítulo
 
 1. Crie `content/semesters/02/` (ou o número correspondente), com dados próprios de fases, fontes e questões. Cada fase contém assuntos; cada assunto contém seus capítulos.
 2. Carregue os scripts no `index.html` antes de `content/catalog.js`. Use um namespace próprio durante o carregamento, sem sobrescrever os dados do primeiro semestre.
-3. Registre o semestre em `FIAPCurriculum.semesters` com `status: "available"`, `phases`, `sources`, `bank` e `reviewPhases`. O banco possui `minis`, três `finals`, `chapters` e `chapterIds`. Configure também `bank.reviewPhases`.
+3. Registre o semestre em `FIAPCurriculum.semesters` com `status: "available"`, `phases`, `sources`, `bank`, `roadmap` e `reviewPhases`. O banco possui `minis`, três `finals`, `chapters` e `chapterIds`. Configure também `bank.reviewPhases`.
 4. IDs de fase e capítulo precisam ser inteiros positivos. Os capítulos de cada assunto devem referenciar os mesmos objetos presentes em `phase.chapters`, sem duplicação entre assuntos. Inclua `title`, `shortTitle`, `summary`, `outcomes`, `memory` e `checklist` na fase; o renderizador usa esses campos.
 5. Acrescente os arquivos à lista de `scripts/project-files.mjs` e à validação. Cada semestre terá sua própria chave de progresso automaticamente.
 
@@ -25,12 +25,14 @@ Os campos `body`, `worked` e `extension` são HTML estático revisado. Use estes
 - **Matemática no texto.** `<span class="tex">2^{n}-1</span>`. O TeX fica numa linha só, sem tabulação nem quebra. Dentro de template literal, escreva a barra em dobro (`\\frac`, `\\cdot`, `\\text{…}`); `npm test` renderiza cada fórmula com o KaTeX e acusa barra perdida. Em HTML, escreva `<` como `&lt;` e `&` como `&amp;`.
 - **Tabela de passos.** `<div class="table-scroll wide"><table class="steps"><caption>…</caption>…</table></div>`. Marque a coluna que forma a resposta com `class="step-key"`, contadores com `class="step-muted"` e a última linha com `class="step-final"`. Logo depois, `<p class="read-order">` explica como ler a tabela (por exemplo, restos de baixo para cima).
 - **Conta armada.** `<ol class="calc"><li>passo</li>…<li class="calc-result">resultado</li></ol>`, um passo por linha, sempre com a conferência de volta quando houver.
-- **Laboratório.** `<div class="lab" data-lab="bases" data-value="1985" data-from="10" data-to="6"></div>` abre o conversor de bases com esse exemplo; `<div class="lab" data-lab="surface"></div>` abre o laboratório 3D de gradiente.
+- **Laboratório.** `<div class="lab" data-lab="bases" data-value="1985" data-from="10" data-to="6"></div>` abre o conversor de bases com esse exemplo; `<div class="lab" data-lab="surface"></div>` abre o laboratório 3D de gradiente. Coloque o laboratório entre dois trechos, fora de qualquer `section`.
+- **Mapa mental.** O campo `map` do capítulo é `{ label, children: [{ label, pages?, note?, children? }] }`: de 3 a 6 ramos, até 3 níveis abaixo da raiz, até 32 nós, rótulos de até 60 caracteres e `note` de 10 a 160 caracteres, que aparece quando o aluno clica na folha. Os capítulos temáticos têm mapa.
+- **Trilha do semestre.** `content/semesters/01/roadmap.js` define a faixa de cada capítulo e as conexões entre fases (`["1-3", "2-2", "rótulo curto"]`, sempre de uma fase para outra posterior). Todo capítulo precisa participar de ao menos uma conexão.
 
 Nunca copie frases dos PDFs nem os rodapés que identificam o aluno. Escreva a explicação com suas palavras e cite as páginas.
 
 Cada questão possui ID único, fase, competência, nível, enunciado, cinco alternativas distintas, uma correta, justificativa para todas as alternativas e referência de páginas. A lista `bank.chapters['p1-c2']`, por exemplo, aponta para as questões da fase 1, capítulo 2. As referências não dependem do endereço do acervo privado.
 
-Prefira situações que exijam interpretar, calcular, comparar ou rastrear. Evite apenas trocar números para inflar a contagem. Justifique os distratores pelo erro de raciocínio que representam. Não chame uma questão de oficial sem documentação que sustente essa origem.
+O enunciado traz cenário, dados e uma pergunta precisa, em duas a quatro frases (de 120 a 650 caracteres). Use crases para código curto e um bloco cercado por três crases para código de várias linhas. As páginas da questão precisam se sobrepor a um trecho citado do capítulo: é para lá que o link “Rever o trecho” leva depois da correção. Prefira situações que exijam interpretar, calcular, comparar ou rastrear. Evite apenas trocar números para inflar a contagem. Justifique os distratores pelo erro de raciocínio que representam. Não chame uma questão de oficial sem documentação que sustente essa origem.
 
 Antes de compartilhar, execute `npm test`, confira os temas claro/escuro e o celular e exporte para uma pasta nova com `npm run export -- <destino>`. Execute novamente `npm test` dentro da cópia exportada. Nunca inclua respostas salvas do navegador.

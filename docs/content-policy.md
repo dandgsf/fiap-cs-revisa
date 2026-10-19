@@ -2,6 +2,18 @@
 
 A organização é semestre → fase → assunto → capítulo. O assunto é um agrupamento editorial dentro da fase; a referência acadêmica continua sendo o capítulo do PDF individual. As páginas contam desde a capa.
 
+## Citação por trecho
+
+Cada trecho do resumo cita as páginas do PDF individual que sustentam aquela ideia, contadas desde a capa. As faixas são curtas e conferidas no texto do PDF; a faixa geral do capítulo continua no topo da lição. Explicações são escritas com palavras próprias: o guia cita a página, não copia o texto. Questões e simulados mostram capítulo e páginas somente depois da correção, com link para o trecho do resumo que cobre aquelas páginas.
+
+## Matemática passo a passo
+
+Toda técnica de cálculo segue a mesma ordem: a ideia em poucas frases, a fórmula destacada com a legenda dos símbolos, a conta resolvida linha a linha (tabela de passos ou conta armada), a conferência de volta e o erro mais comum. Os exemplos do PDF são retomados com a página citada; exemplos autorais variam os números.
+
+## Enunciados
+
+Um enunciado traz um cenário (a missão Aurora ou uma situação técnica real), os dados necessários e uma pergunta precisa, em duas a quatro frases. Evite pegadinha de leitura e dupla negação. Ao revisar um enunciado, mantenha alternativas, ordem e gabarito; se um distrator precisar mudar, a mudança passa por revisão própria e pelos testes de cálculo.
+
 ## Prioridade de estudo
 
 - **Essencial:** conceitos e operações transferíveis, com dependência entre assuntos e aplicação em problemas. Inclui lógica, código, estruturas, modelos e interpretação energética.

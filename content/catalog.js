@@ -25,7 +25,7 @@
     for (const subject of phase.subjects) for (const ch of subject.chapters) ch.subjectId = subject.id;
   }
   globalThis.FIAPCurriculum = {
-    name: "FIAP CS Revisa", slug: "fiap-cs-revisa", version: "1.0.0",
+    name: "FIAP CS Revisa", slug: "fiap-cs-revisa", version: "1.1.0",
     semesters: [{ id: "semestre-1", number: 1, title: "1º semestre", status: "available",
       phases: globalThis.FIAPCourse.phases, bank: globalThis.FIAPBank, sources: globalThis.FIAPSources, roadmap: globalThis.FIAPRoadmap,
       reviewPhases: [1, 2] },
