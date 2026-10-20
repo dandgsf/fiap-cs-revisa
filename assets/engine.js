@@ -18,7 +18,7 @@
   function freshState(bank) {
     const phaseIds = bank ? Object.keys(bank.minis).map(Number) : [1, 2, 3, 4];
     const size = Math.max(0, ...phaseIds);
-    return { version: 2, theme: "dark", activeTab: `phase-${phaseIds[0] || 1}`, studyMs: Array(size).fill(0),
+    return { version: 2, theme: "dark", sidebar: "expanded", activeTab: `phase-${phaseIds[0] || 1}`, studyMs: Array(size).fill(0),
       attempts: [], minis: {}, practices: {}, readChapters: {}, checks: {}, updatedAt: 0 };
   }
 
@@ -132,6 +132,7 @@
     try { value = typeof raw === "string" ? JSON.parse(raw) : raw; } catch { return result; }
     if (!value || value.version !== 2) return result;
     if (value.theme === "light") result.theme = "light";
+    if (value.sidebar === "collapsed") result.sidebar = "collapsed";
     if ([...Object.keys(bank.minis).map(id => `phase-${id}`), "final"].includes(value.activeTab)) result.activeTab = value.activeTab;
     result.studyMs = result.studyMs.map((_, index) => {
       const time = value.studyMs?.[index];

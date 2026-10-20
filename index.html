@@ -8,17 +8,25 @@
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
   <link rel="icon" href="assets/fiap.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
   <link rel="stylesheet" href="assets/styles.css">
   <script defer src="content/semesters/01/phases/01.js"></script>
   <script defer src="content/semesters/01/phases/02.js"></script>
   <script defer src="content/semesters/01/phases/03.js"></script>
   <script defer src="content/semesters/01/phases/04.js"></script>
-  <script defer src="content/semesters/01/enrichment.js"></script>
   <script defer src="content/semesters/01/sources.js"></script>
   <script defer src="content/semesters/01/questions.js"></script>
   <script defer src="content/semesters/01/final-exams.js"></script>
   <script defer src="content/semesters/01/practice.js"></script>
+  <script defer src="content/semesters/01/roadmap.js"></script>
   <script defer src="content/catalog.js"></script>
+  <script defer src="assets/vendor/gsap/gsap.min.js"></script>
+  <script defer src="assets/vendor/katex/katex.min.js"></script>
+  <script defer src="assets/math.js"></script>
+  <script defer src="assets/motion.js"></script>
+  <script defer src="assets/maps.js"></script>
+  <script defer src="assets/labs/bases.js"></script>
+  <script defer src="assets/labs/surface.js"></script>
   <script defer src="assets/engine.js"></script>
   <script defer src="assets/render.js"></script>
   <script defer src="assets/app.js"></script>
@@ -54,11 +62,22 @@
       <div id="semester-empty" class="empty-state" hidden><h3>O próximo semestre começa aqui.</h3><p>Ainda não há revisões ou questões publicadas para este semestre. Seus estudos do primeiro continuam salvos.</p><button class="button button-secondary" id="back-semester" type="button">Voltar ao 1º semestre</button></div>
       <div id="semester-content">
         <div class="semester-summary"><p id="catalog-summary"></p><p id="reading-summary"></p></div>
+        <details id="semester-map" class="semester-map"><summary><span class="sm-title">Trilha do semestre</span><span class="sm-hint">Veja como os assuntos das quatro fases se conectam e o que você já revisou. Clique em um capítulo para abrir.</span></summary><div id="roadmap"></div></details>
         <div class="study-tabs-wrap"><div id="phase-tabs" class="study-tabs" role="tablist" aria-label="Fases e simulado final"></div></div>
-        <div class="library-layout">
-          <aside class="library-sidebar"><details id="library-menu" open><summary>Navegar pelos assuntos</summary><nav id="course-tree" aria-label="Semestre, fases, assuntos e capítulos"></nav></details><div class="sidebar-note"><strong>Priorize o raciocínio.</strong><p>Essencial destaca conceitos e aplicações. Complementar guarda detalhes de apoio. Nenhum nível prevê a prova.</p><a href="#criterios">Entender os critérios</a></div></aside>
+        <div class="library-layout" data-sidebar="expanded">
+          <aside class="library-sidebar" id="library-sidebar" aria-labelledby="sidebar-title">
+            <div class="sidebar-inner">
+              <div class="sidebar-head"><h3 id="sidebar-title">Navegar pelos assuntos</h3><button class="icon-button" id="sidebar-close" type="button" aria-controls="library-sidebar" aria-expanded="true" aria-label="Fechar o menu de assuntos"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6.5 6.5 11 11m0-11-11 11"/></svg></button></div>
+              <nav id="course-tree" aria-label="Semestre, fases, assuntos e capítulos"></nav>
+              <div class="sidebar-note"><strong>Priorize o raciocínio.</strong><p>Essencial destaca conceitos e aplicações. Complementar guarda detalhes de apoio. Nenhum nível prevê a prova.</p><a href="#criterios">Entender os critérios</a></div>
+            </div>
+          </aside>
+          <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
           <div class="reading-workspace">
-            <nav id="breadcrumbs" class="breadcrumbs" aria-label="Caminho do conteúdo"></nav>
+            <div class="reading-toolbar">
+              <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-controls="library-sidebar" aria-expanded="true" aria-keyshortcuts="Control+B Meta+B"><svg class="ui-icon panel-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.75" y="4.75" width="16.5" height="14.5"/><path d="M9.25 4.75v14.5"/><path class="panel-chevron" d="m16 9.5-2.5 2.5 2.5 2.5"/></svg><span id="sidebar-toggle-label">Ocultar menu</span><kbd class="shortcut" id="sidebar-shortcut" aria-hidden="true">Ctrl B</kbd></button>
+              <nav id="breadcrumbs" class="breadcrumbs" aria-label="Caminho do conteúdo"></nav>
+            </div>
             <div id="study-notice" class="study-notice" role="alert" hidden></div>
             <div id="phase-panels"></div>
             <section id="panel-final" class="tabpanel final-panel" role="tabpanel" aria-labelledby="tab-final" tabindex="0" hidden>

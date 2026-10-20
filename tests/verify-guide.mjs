@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -8,9 +9,12 @@ import { runtime as runtimeFiles, files as projectFiles } from "../scripts/proje
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = file => readFileSync(join(root, file), "utf8");
+const { vendor } = existsSync(join(root, "scripts/vendor-manifest.mjs")) ? await import("../scripts/vendor-manifest.mjs") : { vendor: [] };
+const hashed = new Set(vendor.map(item => item.path));
 const require = createRequire(import.meta.url);
 const E = require(join(root, "assets/engine.js"));
 const R = require(join(root, "assets/render.js"));
+const katex = require(join(root, "assets/vendor/katex/katex.min.js"));
 const sandbox = vm.createContext({});
 const dataFiles = [...read("index.html").matchAll(/<script defer src="([^"]+)"/g)].map(m => m[1]).filter(file => file.startsWith("content/"));
 for (const file of dataFiles) vm.runInContext(read(file), sandbox, { filename: file });
@@ -165,6 +169,7 @@ check("envio completo, nota, erros, revisão e alternativas embaralhadas", () =>
   assert.equal((initial.match(/<fieldset/g) || []).length, 10);
   assert.equal((initial.match(/type="radio"/g) || []).length, 50);
   assert.doesNotMatch(initial, /correct-option|chosen-wrong|Alternativa correta|review-verdict/);
+  assert.doesNotMatch(initial, /page-ref|source-reference|PDF/, "páginas e fonte só aparecem depois da correção");
   assert.equal(R.feedback(quiz, questions, E, "test"), "");
   for (const item of quiz.items) assert.deepEqual([...item.optionOrder].sort(), [0, 1, 2, 3, 4]);
   assert.ok(quiz.items.some(item => item.optionOrder.join() !== "0,1,2,3,4"));
@@ -279,7 +284,8 @@ check("pacote autocontido, privacidade e identificação autorizada do autor", (
     assert.ok(existsSync(join(root, asset)), asset);
   }
   for (const file of dataFiles) assert.ok(assets.includes(file), file);
-  const runtime = runtimeFiles.map(read).join("\n");
+  // Arquivos de terceiros ficam cobertos pelo hash do manifesto; a varredura vale para o código próprio.
+  const runtime = runtimeFiles.filter(file => !hashed.has(file)).map(read).join("\n");
   const footer = index.match(/<footer\b[^>]*>[\s\S]*?<\/footer>/)[0];
   assert.doesNotMatch(runtime, /\b(?:fetch|XMLHttpRequest|WebSocket|sendBeacon)\s*\(/);
   assert.doesNotMatch(runtime, /@import\b|url\(\s*["']?(?:https?:|\/\/)/i);
@@ -390,12 +396,361 @@ check("exportação explícita e ausência de formatos comuns de segredos", () =
     assert.ok(existsSync(join(root, file)), file);
     assert.ok(!file.split("/").includes(".git"));
     assert.doesNotMatch(file, /\.(?:pdf|pem|pub|key|pfx|p12)$/i);
+    if (hashed.has(file)) continue;
     const text = read(file);
     for (const [category, pattern] of detectors) assert.ok(!pattern.test(text), `${file}: detector ${category}`);
   }
   assert.match(read("scripts/serve.mjs"), /server\.listen\(port, "127\.0\.0\.1"/);
   assert.match(read("scripts/serve.mjs"), /runtime\.includes\(file\)/);
   assert.match(read("index.html"), /connect-src 'none'/);
+});
+
+const htmlFields = chapter => ["body", "worked", "extension"].map(field => chapter[field] || "").join("\n");
+const decode = text => text.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+const texSources = html => [...html.matchAll(/<(span|div) class="(tex|tex-block)">([\s\S]*?)<\/\1>/g)].map(match => decode(match[3]));
+// Em template literal, "\t", "\f", "\n", "\r", "\v" e "\b" viram caracteres de controle e "\c", "\s", "\a"… perdem a barra.
+const bareCommand = /(?<![\\A-Za-z])(frac|dfrac|tfrac|sqrt|cdot|cdots|ldots|times|div|pm|sum|prod|int|lim|log|ln|exp|sin|cos|tan|in|le|leq|ge|geq|neq|approx|equiv|alpha|beta|gamma|delta|Delta|epsilon|varepsilon|eta|theta|lambda|mu|sigma|Sigma|pi|omega|phi|varphi|partial|nabla|infty|quad|qquad|left|right|text|mathrm|mathbf|mathbb|operatorname|hat|bar|overline|underbrace|overbrace|binom|begin|end|land|lor|lnot|oplus|implies|iff|forall|exists|subset|cup|cap|Rightarrow|Leftrightarrow)\b/;
+function texProblems(tex) {
+  const problems = [];
+  if (/[\u0000-\u001F]/.test(tex)) problems.push("caractere de controle (barra invertida perdida ou quebra de linha no TeX)");
+  if (bareCommand.test(tex)) problems.push("comando sem barra: " + tex.match(bareCommand)[0]);
+  try { katex.renderToString(tex, { throwOnError: true, strict: "ignore" }); } catch (error) { problems.push("KaTeX: " + error.message); }
+  return problems;
+}
+
+check("trechos citados por página", () => {
+  const sample = R.excerpts('<section class="excerpt" data-pages="33–36"><h4>Divisões</h4><p>x</p></section><section class="excerpt" data-pages="39"><p>y</p></section>', "ex-1-3", "Cap. 3 — Exemplo");
+  assert.match(sample, /<section class="excerpt" id="ex-1-3-1" data-pages="33–36"><p class="page-ref"[^>]*><span>PDF<\/span> p\. 33–36<\/p><h4>/);
+  assert.match(sample, /id="ex-1-3-2" data-pages="39"><p class="page-ref"[^>]*><span>PDF<\/span> p\. 39<\/p>/);
+  assert.equal(R.pdfTitle(sources, 1, 3), "A Lógica que Define Cada Decisão no Cérebro Digital da Nave");
+  assert.equal(R.pdfTitle(sources, 4, 4), "O Cálculo Diferencial que Modela as Variações do Sistema Energético");
+  for (const phase of course.phases) {
+    const markup = R.phase(phase, { sources });
+    let excerpts = 0;
+    for (const chapter of phase.chapters) {
+      const html = htmlFields(chapter);
+      assert.doesNotMatch(html, /<section class="excerpt"(?! data-pages="[^"]+">)/, chapter.title + ": trecho sem data-pages");
+      for (const [, pages] of html.matchAll(/<section class="excerpt" data-pages="([^"]+)">/g)) {
+        reference({ phase: phase.id, chapter: chapter.number, pages }, chapter.title + " (trecho)");
+        excerpts++;
+      }
+      assert.ok(markup.includes(`Cap. ${chapter.number} — ${R.pdfTitle(sources, phase.id, chapter.number)} · PDF p. ${chapter.pages}`), chapter.title + ": fonte do capítulo");
+    }
+    assert.equal((markup.match(/class="page-ref"/g) || []).length, excerpts, `fase ${phase.id}: um marcador de página por trecho`);
+  }
+  assert.equal(course.phases.map(R.phase).join("").includes("undefined"), false, "map(R.phase) passa índice como contexto");
+});
+
+check("fórmulas renderizáveis e sem barra perdida", () => {
+  assert.ok(texProblems("\f" + "rac{1}{2}").length > 0, "detecta \\f perdido");
+  assert.ok(texProblems("a " + "\t" + "imes b").length > 0, "detecta \\t perdido");
+  assert.ok(texProblems("cdot x").length > 0, "detecta comando sem barra");
+  assert.deepEqual(texProblems("\\dfrac{1}{1-R_j^{2}}"), []);
+  let total = 0;
+  for (const phase of course.phases) for (const chapter of phase.chapters) {
+    for (const tex of texSources(htmlFields(chapter))) {
+      assert.deepEqual(texProblems(tex), [], `${phase.id}-${chapter.number}: ${tex}`);
+      total++;
+    }
+    assert.doesNotMatch(htmlFields(chapter), /<p class="formula">/, `${phase.id}-${chapter.number}: fórmula antiga sem KaTeX`);
+  }
+  assert.ok(total >= 6, "fórmulas convertidas para KaTeX");
+  const index = read("index.html");
+  assert.ok(index.indexOf("assets/math.js") > index.indexOf("assets/vendor/katex/katex.min.js"));
+  assert.match(read("assets/app.js"), /FIAPMath\?\.renderIn\(/, "sem KaTeX o guia continua funcionando");
+});
+
+function mapProblems(map, phaseId, chapterNumber) {
+  const problems = [];
+  let nodes = 0;
+  const walk = (node, depth, path) => {
+    nodes++;
+    if (typeof node.label !== "string" || !node.label.trim() || node.label.length > 60) problems.push(`${path}: rótulo vazio ou com mais de 60 caracteres`);
+    if (node.note !== undefined && (typeof node.note !== "string" || node.note.length > 160 || node.note.length < 10)) problems.push(`${path}: nota fora de 10–160 caracteres`);
+    if (node.pages !== undefined) {
+      try { reference({ phase: phaseId, chapter: chapterNumber, pages: node.pages }, path); } catch (error) { problems.push(error.message); }
+    }
+    if (node.children !== undefined) {
+      if (!Array.isArray(node.children) || !node.children.length) problems.push(`${path}: children vazio`);
+      else if (depth >= 3) problems.push(`${path}: mais de 3 níveis abaixo da raiz`);
+      else node.children.forEach((child, i) => walk(child, depth + 1, `${path}/${i + 1}`));
+    }
+  };
+  if (!map || !Array.isArray(map.children) || map.children.length < 3 || map.children.length > 6) problems.push("raiz precisa de 3 a 6 ramos");
+  else walk(map, 0, `mapa ${phaseId}-${chapterNumber}`);
+  if (nodes > 33) problems.push(`${nodes - 1} nós além da raiz (máximo 32)`);
+  return problems;
+}
+
+check("mapas mentais válidos e acessíveis", () => {
+  const sample = { label: "Sistemas <numéricos>", children: [
+    { label: "Notação posicional", pages: "12–21", children: [{ label: "Peso bⁱ", note: "Cada posição vale a base elevada à posição." }, { label: "Zero mantém posições" }] },
+    { label: "Conversões", children: [{ label: "Divisões sucessivas", pages: "33–40" }] },
+    { label: "Bits e bytes", note: "n bits representam 2ⁿ combinações." }
+  ] };
+  assert.deepEqual(mapProblems(sample, 1, 3), []);
+  assert.ok(mapProblems({ label: "x", children: [{ label: "a" }, { label: "b" }] }, 1, 3).length, "menos de 3 ramos");
+  assert.ok(mapProblems({ label: "x", children: [{ label: "a", pages: "99" }, { label: "b" }, { label: "c" }] }, 1, 3).length, "página fora do PDF");
+  const markup = R.mindmap(sample, "map-1-3");
+  assert.equal((markup.match(/<figure class="mindmap wide" id="map-1-3"/g) || []).length, 1);
+  // Ramos recolhidos ao abrir: o mapa cabe acima da dobra e o resumo aparece na primeira tela.
+  assert.equal((markup.match(/aria-expanded="true"/g) || []).length, 0, "nada começa aberto");
+  assert.equal((markup.match(/aria-expanded="false"/g) || []).length, 4, "ramos e detalhes das folhas começam fechados");
+  assert.equal((markup.match(/<ul class="mm-children" id="[^"]+" hidden>/g) || []).length, 2, "filhos dos ramos ocultos");
+  assert.match(read("assets/maps.js"), /depth-1>\.mm-head>\.mm-node/, "Mostrar os detalhes também abre os ramos");
+  assert.equal((markup.match(/style="--branch:var\(--map-\d\)"/g) || []).length, 3);
+  assert.match(markup, /<span class="mm-pages">p\. 12–21<\/span>/);
+  assert.match(markup, /Sistemas &lt;numéricos&gt;/);
+  const ids = [...markup.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
+  assert.equal(ids.length, new Set(ids).size);
+  for (const [, target] of markup.matchAll(/aria-controls="([^"]+)"/g)) assert.ok(ids.includes(target), target);
+  for (const phase of course.phases) for (const chapter of phase.chapters) {
+    if (chapter.map) assert.deepEqual(mapProblems(chapter.map, phase.id, chapter.number), [], `${phase.id}-${chapter.number}`);
+  }
+  const styles = read("assets/styles.css"), index = read("index.html");
+  assert.match(styles, /@container mindmap \(max-width:\s*40rem\)/);
+  assert.match(styles.slice(styles.lastIndexOf("@media print")), /\.mindmap \[hidden\]/);
+  assert.match(styles.slice(styles.lastIndexOf("@media print")), /\.mm-node:not\(\.mm-leaf\)\[aria-expanded="false"\]::after\{display:none\}/, "impressão expande e esconde o selo +N");
+  // A revelação oculta os nós com estilo inline até entrarem na tela; a impressão precisa vencê-lo.
+  assert.match(styles.slice(styles.lastIndexOf("@media print")), /\.mm-root,\.mm-node\{opacity:1!important;visibility:visible!important\}/);
+  // Alvos de toque de 44px (restrição do projeto), inclusive no menu do topo no celular.
+  for (const rule of [/\.mm-node\{[^}]*min-height:44px/, /\.mm-all\{[^}]*min-height:44px/]) assert.match(styles, rule);
+  assert.doesNotMatch(styles, /\.site-header nav a,\.nav-button\{[^}]*min-height:(?:[0-3]\d|4[0-3])px/);
+  assert.ok(index.indexOf("assets/maps.js") > index.indexOf("assets/vendor/gsap/gsap.min.js"));
+  assert.ok(index.indexOf("assets/motion.js") > index.indexOf("assets/vendor/gsap/gsap.min.js"));
+  assert.match(read("assets/motion.js"), /prefers-reduced-motion: reduce/);
+});
+
+check("enunciados ricos e fonte detalhada só no resultado", () => {
+  const rich = R.rich("Veja <b>x</b> e `a<b`.\n\n```\nfor i in range(3):\n    print(i)\n```\nDepois responda.");
+  assert.doesNotMatch(rich, /<b>/);
+  assert.match(rich, /&lt;b&gt;x&lt;\/b&gt;/);
+  assert.match(rich, /<code>a&lt;b<\/code>/);
+  // Enunciados de 2–4 frases em peso normal: negrito em bloco cansa a leitura.
+  for (const prompt of [".question-prompt", ".review-prompt"]) assert.doesNotMatch(read("assets/styles.css"), new RegExp(`\\${prompt}\\{[^}]*font-weight:[6-9]00`));
+  assert.match(rich, /<pre><code>for i in range\(3\):\n    print\(i\)<\/code><\/pre>/);
+  assert.match(rich, /<p>Depois responda\.<\/p>/);
+  assert.equal(R.rich("Só `x` aqui", { inline: true }), "Só <code>x</code> aqui");
+  const fixture = [{ id: 1, chapters: [{ number: 3, body: '<section class="excerpt" data-pages="12–19"><p>a</p></section><section class="excerpt" data-pages="33–40"><p>b</p></section>', worked: '<section class="excerpt" data-pages="26"><p>c</p></section>', extension: "" }] }];
+  assert.equal(R.excerptFor(fixture, { phase: 1, chapter: 3, pages: "36" }), "ex-1-3-2");
+  assert.equal(R.excerptFor(fixture, { phase: 1, chapter: 3, pages: "26" }), "wk-1-3-1");
+  assert.equal(R.excerptFor(fixture, { phase: 1, chapter: 3, pages: "50–51" }), null);
+  const state = ready();
+  const quiz = E.startFinal(state, bank, rng(23));
+  const questions = bank.finals.find(set => set.id === quiz.setId).questions;
+  const form = R.form(quiz, questions, "rich", "final", 0);
+  assert.equal((form.match(/class="question-prompt"/g) || []).length, 10);
+  for (const item of quiz.items) assert.match(form, new RegExp(`aria-labelledby="rich-${item.id}-legend rich-${item.id}-prompt"`));
+  assert.doesNotMatch(form, /page-ref|source-reference|PDF|Rever o trecho/);
+  finish(quiz, questions);
+  const phases = course.phases.map(phase => ({ ...phase, chapters: phase.chapters.map(ch => ({ ...ch, body: `<section class="excerpt" data-pages="${ch.pages}"><p>x</p></section>` })) }));
+  const feedback = R.feedback(quiz, questions, E, "rich", { sources, phases });
+  assert.equal((feedback.match(/class="source-reference"/g) || []).length, 10);
+  for (const q of questions) {
+    const segment = feedback.split(`id="review-rich-${q.id}"`)[1].split("</article>")[0];
+    assert.ok(segment.includes(`Cap. ${q.source.chapter} — ${R.escape(R.pdfTitle(sources, q.phase, q.source.chapter))} · p. ${q.source.pages}`), q.id);
+    assert.match(segment, new RegExp(`data-review-excerpt="ex-${q.phase}-${q.source.chapter}-1"[^>]*>Rever o trecho`));
+  }
+  assert.match(feedback, /Seu caderno de erros|Agora explique/);
+  const plain = R.feedback(quiz, questions, E, "rich");
+  assert.equal((plain.match(/class="source-reference"/g) || []).length, 10, "sem contexto continua mostrando a fonte");
+});
+
+check("conteúdo completo: trechos, mapas, passo a passo, laboratórios e enunciados", () => {
+  const calculation = { 1: [3, 4, 6, 7], 2: [2, 5, 6, 7], 3: [2, 5, 7, 8], 4: [3, 4, 5, 6, 7] };
+  for (const phase of course.phases) for (const chapter of phase.chapters) {
+    const label = `${phase.id}-${chapter.number}`;
+    const excerpts = [...chapter.body.matchAll(/<section class="excerpt" data-pages="/g)].length;
+    assert.ok(excerpts >= (chapter.number === 1 ? 2 : 3), `${label}: ${excerpts} trechos citados`);
+    const loose = chapter.body.replace(/<section class="excerpt" data-pages="[^"]+">[\s\S]*?<\/section>/g, "").replace(/<div class="lab"[^>]*><\/div>/g, "").trim();
+    assert.equal(loose, "", `${label}: conteúdo fora de trecho citado`);
+    if (chapter.number >= 2) assert.ok(chapter.map, `${label}: mapa mental`);
+    if (calculation[phase.id].includes(chapter.number)) {
+      assert.match(htmlFields(chapter), /class="formula"/, `${label}: fórmula destacada`);
+      assert.match(htmlFields(chapter), /class="(steps|calc)"/, `${label}: passo a passo`);
+    }
+  }
+  assert.match(course.phases[0].chapters[2].body, /data-lab="bases"/);
+  assert.match(course.phases[3].chapters[3].body, /data-lab="surface"/);
+  for (const q of all) {
+    assert.ok(q.prompt.length >= 120 && q.prompt.length <= 650, `${q.id}: enunciado com ${q.prompt.length} caracteres`);
+    assert.ok(R.excerptFor(course.phases, q.source), `${q.id}: páginas ${q.source.pages} fora dos trechos citados`);
+  }
+});
+
+check("alternativas e gabaritos estáveis para o progresso salvo", () => {
+  // Respostas salvas guardam o índice original da alternativa: IDs, alternativas e gabarito não podem mudar sem migração.
+  const stable = all.map(q => [q.id, q.options, q.correctIndex]).sort((a, b) => a[0] < b[0] ? -1 : 1);
+  assert.equal(createHash("sha256").update(JSON.stringify(stable)).digest("hex"), "41e9c21c4cbb48c158ae48b13b1c52cd919334f364224862306340732553e0b5");
+});
+
+check("conversor de bases: passos e resultados", () => {
+  const B = require(join(root, "assets/labs/bases.js"));
+  const binary = B.convert("45", 10, 2);
+  assert.equal(binary.ok, true);
+  // A conferência vale também para resultados com mais de 24 algarismos (o limite é só da entrada).
+  const big = B.convert("99999999", 10, 2);
+  assert.ok(big.result.length > 24 && big.check !== "", "conferência de resultado longo");
+  assert.doesNotMatch(read("assets/labs/bases.js"), /data-read="/, "tabelas do laboratório não colidem com a marcação de leitura");
+  assert.equal(binary.result, "101101");
+  assert.equal(binary.method, "divisions");
+  assert.deepEqual(binary.steps.divisions.map(step => [step.dividend, step.quotient, step.remainder]),
+    [["45", "22", 1], ["22", "11", 0], ["11", "5", 1], ["5", "2", 1], ["2", "1", 0], ["1", "0", 1]]);
+  const grouped = B.convert("101101", 2, 16);
+  assert.equal(grouped.result, "2D");
+  assert.equal(grouped.method, "grouping");
+  assert.deepEqual(grouped.steps.groups.bits, ["0010", "1101"]);
+  assert.deepEqual(grouped.steps.groups.digits, ["2", "D"]);
+  const expanded = B.convert("2D", 16, 10);
+  assert.equal(expanded.result, "45");
+  assert.equal(expanded.method, "positional");
+  assert.deepEqual(expanded.steps.expansion.map(step => [step.digit, step.position, step.weight, step.product]), [["2", 1, "16", "32"], ["D", 0, "1", "13"]]);
+  assert.equal(B.convert("1985", 10, 6).result, "13105");
+  assert.equal(B.convert("13105", 6, 10).result, "1985");
+  const fraction = B.convert("0,101", 2, 10);
+  assert.equal(fraction.result, "0,625");
+  assert.deepEqual(fraction.steps.expansion.map(step => step.product), ["0", "0,5", "0", "0,125"]);
+  const periodic = B.convert("0,1", 10, 2);
+  assert.ok(periodic.result.startsWith("0,0001100110"), periodic.result);
+  assert.equal(periodic.periodic, true);
+  assert.deepEqual(periodic.steps.multiplications.slice(0, 4).map(step => step.digit), ["0", "0", "0", "1"]);
+  assert.equal(periodic.steps.multiplications[5].repeats, 2, "0,2 volta na linha 6: a fração da linha 2 se repete");
+  assert.equal(periodic.steps.multiplications[1].repeats, null);
+  assert.equal(B.convert("0,625", 10, 2).result, "0,101");
+  assert.equal(B.convert("0,625", 10, 2).periodic, false);
+  assert.equal(B.convert("3A", 16, 2).result, "111010");
+  assert.equal(B.convert("3a", 16, 2).result, "111010");
+  assert.equal(B.convert("FF", 16, 8).result, "377");
+  assert.equal(B.convert("12,5", 10, 2).result, "1100,1");
+  assert.equal(B.convert("1985", 10, 6).check.includes("1985"), true);
+  const invalid = B.convert("128", 8, 10);
+  assert.equal(invalid.ok, false);
+  assert.match(invalid.error, /\b8\b/);
+  assert.equal(B.convert("12", 17, 10).ok, false);
+  assert.equal(B.convert("", 10, 2).ok, false);
+  assert.equal(B.convert("1G", 16, 10).ok, false);
+  assert.match(read("index.html"), /assets\/labs\/bases\.js/);
+});
+
+check("gradiente: núcleo numérico do laboratório 3D", () => {
+  const S = require(join(root, "assets/labs/surface.js"));
+  assert.deepEqual(S.functions.himmelblau.grad(-10, 10), [-3794, 3518]);
+  assert.equal(S.functions.himmelblau.f(-10, 10), 16690);
+  assert.deepEqual(S.functions.bowl.grad(1, 2), [2, 4]);
+  assert.deepEqual(S.tangentPlane("bowl", 1, 2), { f0: 5, gx: 2, gy: 4 });
+  const run = S.descent("himmelblau", -10, 10, S.functions.himmelblau.eta, 400);
+  assert.equal(run.diverged, false);
+  const [x, y, value] = run.path.at(-1);
+  assert.ok(value < 1e-3, "termina perto de um mínimo");
+  assert.ok(S.functions.himmelblau.minima.some(([mx, my]) => Math.hypot(x - mx, y - my) < 0.05), `${x}, ${y}`);
+  assert.ok(run.path.length <= 401);
+  assert.deepEqual(run.path[0], [-10, 10, 16690]);
+  const other = S.descent("himmelblau", -10, 10, 0.003, 400).path.at(-1);
+  assert.ok(Math.hypot(other[0] - 3.5844, other[1] + 1.8481) < 0.05, "η maior leva a outro mínimo");
+  assert.equal(S.descent("himmelblau", -10, 10, 0.05, 400).diverged, true);
+  assert.equal(S.descent("bowl", 3, -2, 0.1, 200).diverged, false);
+  // O aluno refaz o 1º passo à mão com o η da tela: o valor exibido tem de ser exatamente o usado.
+  for (const [name, fn] of Object.entries(S.functions)) for (let position = 0; position <= 1000; position++) {
+    const eta = S.etaAt(name, position);
+    assert.ok(eta >= fn.etaRange[0] && eta <= fn.etaRange[1], `${name} ${position}: η = ${eta}`);
+    assert.equal(Number(S.formatEta(eta).replace(",", ".")), eta, `${name} ${position}: η exibido difere do usado`);
+  }
+  assert.equal(S.formatEta(S.functions.himmelblau.eta), "0,002");
+  assert.equal((read("assets/labs/surface.js").match(/etaAt\(/g) || []).length, 2, "η só muda quando o controle se move");
+  assert.match(read("assets/labs/surface.js"), /assets\/vendor\/three\/three\.min\.js/);
+  assert.doesNotMatch(read("index.html"), /three\.min\.js/, "three.js carrega só ao abrir o laboratório");
+  assert.match(read("index.html"), /assets\/labs\/surface\.js/);
+});
+
+check("trilha do semestre consistente", () => {
+  const semester = curriculum.semesters[0];
+  const roadmap = semester.roadmap;
+  assert.ok(roadmap, "semestre sem trilha");
+  const lanes = roadmap.lanes.map(lane => lane.id);
+  assert.deepEqual(lanes, ["projeto", "logic", "code", "system", "math", "energy"]);
+  const keys = course.phases.flatMap(phase => phase.chapters.map(ch => `${phase.id}-${ch.number}`));
+  assert.deepEqual(Object.keys(roadmap.chapterLane).sort(), [...keys].sort());
+  for (const [key, lane] of Object.entries(roadmap.chapterLane)) {
+    assert.ok(lanes.includes(lane), key);
+    if (key.endsWith("-1")) assert.equal(lane, "projeto", key);
+  }
+  assert.ok(roadmap.edges.length >= 18);
+  const seen = new Set(), linked = new Set();
+  for (const [from, to, label] of roadmap.edges) {
+    assert.ok(keys.includes(from) && keys.includes(to), `${from} → ${to}`);
+    assert.ok(Number(from.split("-")[0]) < Number(to.split("-")[0]), `${from} → ${to}: a trilha avança de fase`);
+    assert.ok(label && label.length <= 60, `${from} → ${to}: rótulo`);
+    assert.ok(!seen.has(from + ">" + to), "aresta repetida");
+    seen.add(from + ">" + to); linked.add(from); linked.add(to);
+  }
+  assert.deepEqual(keys.filter(key => !linked.has(key)), [], "capítulos fora da trilha");
+  const markup = R.roadmap(semester, { "p1-c3": { read: true, score: 7.5 }, "p2-c2": { read: false, score: null } });
+  assert.equal((markup.match(/class="rm-node[^"]*"[^>]*data-open-chapter=/g) || []).length, 32);
+  assert.match(markup, /data-node="1-3"[\s\S]*?Lido · prática 7,5/);
+  assert.match(markup, /data-node="2-2"[\s\S]*?Não lido/);
+  const ids = [...markup.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
+  assert.equal(ids.length, new Set(ids).size);
+  for (const [, target] of markup.matchAll(/aria-describedby="([^"]+)"/g)) assert.ok(ids.includes(target), target);
+  assert.match(read("index.html"), /<details id="semester-map" class="semester-map">/);
+  assert.match(read("assets/styles.css"), /@container roadmap \(max-width:\s*56rem\)/);
+  assert.match(read("assets/maps.js"), /drawRoadmap/);
+});
+
+check("menu lateral retrátil, persistente e acessível", () => {
+  assert.equal(E.freshState().sidebar, "expanded");
+  const collapsed = { ...ready(), sidebar: "collapsed" };
+  assert.equal(E.restore(JSON.stringify(collapsed), bank).sidebar, "collapsed");
+  assert.equal(E.restore(JSON.stringify({ ...ready(), sidebar: "x" }), bank).sidebar, "expanded");
+  const legacy = ready();
+  delete legacy.sidebar;
+  const quiz = E.startMini(legacy, 1, bank, rng(4));
+  E.answer(quiz, quiz.items[0].id, 2);
+  const restored = E.restore(JSON.stringify(legacy), bank);
+  assert.equal(restored.sidebar, "expanded");
+  assert.equal(restored.minis[1].answers[quiz.items[0].id], 2);
+  const index = read("index.html"), app = read("assets/app.js"), styles = read("assets/styles.css");
+  assert.match(index, /id="library-sidebar"/);
+  assert.match(index, /id="sidebar-toggle"[^>]*aria-controls="library-sidebar"/);
+  assert.match(index, /id="sidebar-toggle"[^>]*aria-expanded="true"/);
+  assert.match(index, /id="sidebar-toggle"[^>]*aria-keyshortcuts="Control\+B Meta\+B"/);
+  assert.match(index, /id="sidebar-close"[^>]*aria-controls="library-sidebar"/);
+  assert.match(index, /id="sidebar-backdrop"/);
+  assert.doesNotMatch(index, /id="library-menu"/);
+  assert.match(app, /event\.ctrlKey\s*\|\|\s*event\.metaKey/);
+  assert.match(app, /toLowerCase\(\)\s*===\s*'b'/);
+  assert.match(app, /closest\('input, select, textarea/);
+  assert.match(app, /\.inert\s*=/);
+  assert.match(app, /'Escape'/);
+  assert.match(styles, /transition:[^;}]*grid-template-columns/);
+  assert.match(styles, /\.library-layout\[data-sidebar="collapsed"\]/);
+  assert.match(styles, /\.drawer-open\s+\.library-sidebar/);
+  assert.match(styles, /container-type:\s*inline-size/);
+  // No celular só a barra de leitura fica presa: o cabeçalho rola junto e o deslocamento medido vira zero.
+  assert.match(styles, /@media\(max-width:760px\)\{:root\{--header-offset:0px\}/);
+  assert.match(styles, /@media\(max-width:760px\)[^@]*\.site-header\{position:static/);
+  assert.match(app, /getComputedStyle\(header\)\.position === 'sticky'/);
+  // Foco nunca fica preso num menu oculto; com a gaveta aberta, o resto da página fica inerte (o fundo continua clicável).
+  assert.match(app, /aside\.contains\(document\.activeElement\)/);
+  assert.match(app, /aria-modal/);
+  assert.match(app, /contains\(backdrop\)/);
+});
+
+check("bibliotecas de terceiros fixadas por hash", () => {
+  assert.equal(vendor.length, 24, "GSAP, KaTeX (js, css e 20 fontes) e three.js");
+  assert.deepEqual([...new Set(vendor.map(item => item.library))].sort(), ["GSAP", "KaTeX", "three.js"]);
+  const licenses = existsSync(join(root, "assets/vendor/LICENSES.md")) ? read("assets/vendor/LICENSES.md") : "";
+  for (const item of vendor) {
+    assert.match(item.path, /^assets\/vendor\/[\w.\/-]+$/, item.path);
+    assert.ok(runtimeFiles.includes(item.path), item.path + ": fora da lista de runtime");
+    assert.ok(existsSync(join(root, item.path)), item.path);
+    const hash = createHash("sha256").update(readFileSync(join(root, item.path))).digest("hex");
+    assert.equal(hash, item.sha256, item.path + ": hash divergente do manifesto");
+    assert.ok(licenses.includes(item.library) && licenses.includes(item.version), item.library + " sem licença registrada");
+  }
+  for (const file of runtimeFiles.filter(file => file.startsWith("assets/vendor/"))) {
+    assert.ok(vendor.some(item => item.path === file), file + ": arquivo de terceiros sem hash");
+  }
+  assert.ok(projectFiles.includes("assets/vendor/LICENSES.md"));
 });
 
 console.log("\n" + groups.length + " grupos aprovados. Validação lógica/estrutural; não substitui inspeção visual e interação em navegador.");
